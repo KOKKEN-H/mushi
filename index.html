@@ -1,0 +1,2433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蟲神器 ソロバトル（スターター＋ブースター1〜2弾）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #201338;
+    --bg2: #150b28;
+    --panel: #2c1c4a;
+    --panel2: #3a2760;
+    --line: #ffffff2a;
+    --gold: #ffc93c;
+    --gold2: #ff9f1c;
+    --red: #ff5d6c;
+    --blue: #29c5f6;
+    --green: #6be675;
+    --purple: #c084fc;
+    --text: #fff8ec;
+    --sub: #c6b6ea;
+  }
+  * { box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; color:var(--text); min-height:100vh;
+    font-family: "M PLUS Rounded 1c","Zen Maru Gothic","Hiragino Sans","Yu Gothic",sans-serif;
+    background:
+      radial-gradient(circle at 12% 8%, #ff5d6c22 0%, transparent 40%),
+      radial-gradient(circle at 88% 18%, #29c5f622 0%, transparent 42%),
+      radial-gradient(circle at 50% 92%, #6be67522 0%, transparent 45%),
+      linear-gradient(160deg, var(--bg) 0%, var(--bg2) 100%);
+    background-attachment: fixed;
+  }
+  h1,h2,h3{ font-family:"M PLUS Rounded 1c",sans-serif; font-weight:800; margin:0 0 8px; letter-spacing:.01em;}
+  #app{ max-width:1200px; margin:0 auto; padding:14px 12px 60px; }
+  .topbar{ display:flex; align-items:baseline; justify-content:space-between; border-bottom:3px solid var(--line); padding-bottom:10px; margin-bottom:14px;}
+  .topbar h1{ font-size:23px; color:var(--gold); text-shadow:0 2px 0 #00000055;}
+  .topbar .sub{ font-size:12px; color:var(--sub); font-weight:500;}
+  button{
+    font-family:inherit; cursor:pointer; border:none; background:var(--panel2); color:var(--text);
+    border-radius:999px; padding:9px 16px; font-size:13px; font-weight:700;
+    box-shadow:0 3px 0 #00000055, 0 2px 6px #0004; transition:transform .1s, box-shadow .1s, filter .15s;
+  }
+  button:hover:not(:disabled){ filter:brightness(1.12); }
+  button:active:not(:disabled){ transform:translateY(2px); box-shadow:0 1px 0 #00000055, 0 1px 3px #0004; }
+  button:disabled{ opacity:.35; cursor:default; box-shadow:none;}
+  button.primary{ background:linear-gradient(180deg,var(--gold),var(--gold2)); color:#3a2000; box-shadow:0 3px 0 #b5720a, 0 2px 8px #0006;}
+  button.primary:active:not(:disabled){ box-shadow:0 1px 0 #b5720a, 0 1px 4px #0006;}
+  button.danger{ background:linear-gradient(180deg,var(--red),#e83a4d); color:#3a0008; box-shadow:0 3px 0 #9c1c28, 0 2px 8px #0006;}
+  button.danger:active:not(:disabled){ box-shadow:0 1px 0 #9c1c28, 0 1px 4px #0006;}
+  .hint{ font-size:12px; color:var(--sub); line-height:1.7; font-weight:500;}
+
+  /* ---- Deck builder ---- */
+  .filterRow{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
+  .filterRow button.active{ background:linear-gradient(180deg,var(--purple),#8b3fe0); color:#fff; box-shadow:0 3px 0 #5b1ea3, 0 2px 8px #0006;}
+  .deckStatus{ position:sticky; top:0; z-index:5; background:var(--panel); border:3px solid var(--line); border-radius:16px; padding:10px 14px; display:flex; align-items:center; gap:16px; margin-bottom:14px; flex-wrap:wrap; box-shadow:0 6px 18px #0006;}
+  .deckStatus .count{ font-size:20px; font-weight:900; color:var(--gold);}
+  .cardGrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px;}
+  .cardTile{ background:var(--panel); border:3px solid var(--line); border-radius:14px; padding:8px; font-size:12px; position:relative; box-shadow:0 4px 0 #0000003a;}
+  .cardTile .name{ font-weight:800; font-size:13px; margin-bottom:3px;}
+  .cardTile .meta{ color:var(--sub); font-size:11px; margin-bottom:4px; font-weight:500;}
+  .cardTile .tech{ font-size:11px; color:#e7defe; margin-top:3px; line-height:1.4; border-top:2px dashed var(--line); padding-top:4px;}
+  .swatch{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px;}
+  .qtyRow{ display:flex; align-items:center; justify-content:space-between; margin-top:6px;}
+  .qtyRow button{ padding:2px 11px; font-size:16px; line-height:1;}
+  .qtyRow .qty{ font-weight:900; font-size:16px; min-width:18px; text-align:center;}
+  .colorTag-red{ color:#ff9098;} .colorTag-blue{ color:#7fe0ff;} .colorTag-green{ color:#a6f2ac;}
+
+  /* ---- Board ---- */
+  .board{ display:flex; flex-direction:column; gap:10px;}
+  .zoneRow{ display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap;}
+  .playerPanel{ border:3px solid var(--line); background:var(--panel); border-radius:18px; padding:10px 12px; box-shadow:0 6px 18px #0006;}
+  .playerPanel.enemy{ border-color:var(--red);}
+  .playerPanel.me{ border-color:var(--blue);}
+  .pHeader{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  .pHeader .pname{ font-weight:800;}
+  .statChips{ display:flex; gap:10px; font-size:12px; color:var(--sub); font-weight:500;}
+  .statChips b{ color:var(--text);}
+  .fieldZone{ display:flex; gap:8px; flex-wrap:wrap; min-height:118px; padding:6px; border:2px dashed var(--line); border-radius:14px; background:#00000022;}
+  .feedZone{ display:flex; gap:4px; flex-wrap:wrap; min-height:36px; padding:4px; }
+  .feedChip{ width:26px; height:34px; border-radius:7px; background:linear-gradient(180deg,var(--gold),var(--gold2)); border:2px solid #3a2000; display:flex; align-items:center; justify-content:center; font-size:10px; box-shadow:0 2px 0 #0004;}
+  .handRow{ display:flex; gap:8px; flex-wrap:wrap; padding:8px 0;}
+
+  .bug{ width:118px; min-height:110px; border-radius:14px; padding:7px; font-size:11px; position:relative; border:3px solid var(--line); background:#2a1c48; cursor:pointer; transition:.12s; box-shadow:0 4px 0 #00000040;}
+  .bug.red{ border-color:var(--red); background:linear-gradient(160deg,#4a1f28,#2c1420);}
+  .bug.blue{ border-color:var(--blue); background:linear-gradient(160deg,#123244,#0f2230);}
+  .bug.green{ border-color:var(--green); background:linear-gradient(160deg,#1a3a20,#132818);}
+  .bug:hover{ transform:translateY(-4px) rotate(-1deg); box-shadow:0 8px 14px #0008;}
+  .bug.selectable{ box-shadow:0 0 0 3px var(--gold), 0 4px 0 #00000040;}
+  .bug.disabledAtk{ opacity:.55; cursor:default;}
+  .bug .bname{ font-weight:800; font-size:12px; margin-bottom:2px;}
+  .bug .hpbar{ height:7px; background:#0006; border-radius:4px; margin:4px 0; overflow:hidden;}
+  .bug .hpbar > div{ height:100%; background:linear-gradient(90deg,#ff5d6c,#ff9f1c);}
+  .bug .hpnum{ font-size:10px; color:var(--sub); font-weight:600;}
+  .bug .atk{ font-size:11px; margin-top:3px; font-weight:700;}
+  .bug .flags{ position:absolute; top:3px; right:4px; font-size:9px; display:flex; gap:2px; flex-direction:column; align-items:flex-end;}
+  .bug .tag{ background:#000a; border-radius:6px; padding:1px 5px; font-weight:700;}
+  .bug .attachList{ font-size:9px; color:var(--gold); margin-top:3px; font-weight:700;}
+  .bug.flipped{ opacity:.35; filter:grayscale(1);}
+  .bug.protected{ box-shadow:0 0 0 3px var(--blue), 0 4px 0 #00000040;}
+
+  /* ---- 攻撃演出 ---- */
+  @keyframes lungeUp{
+    0%{ transform:translateY(0) scale(1); }
+    35%{ transform:translateY(-16px) scale(1.1) rotate(-3deg); box-shadow:0 8px 16px #000a; }
+    60%{ transform:translateY(4px) scale(0.97); }
+    100%{ transform:translateY(0) scale(1); }
+  }
+  @keyframes lungeDown{
+    0%{ transform:translateY(0) scale(1); }
+    35%{ transform:translateY(16px) scale(1.1) rotate(3deg); box-shadow:0 -8px 16px #000a; }
+    60%{ transform:translateY(-4px) scale(0.97); }
+    100%{ transform:translateY(0) scale(1); }
+  }
+  .bug.attacking-up{ animation:lungeUp .55s ease; position:relative; z-index:6; }
+  .bug.attacking-down{ animation:lungeDown .55s ease; position:relative; z-index:6; }
+
+  @keyframes hitShake{
+    0%,100%{ transform:translateX(0); }
+    15%{ transform:translateX(-7px) rotate(-2deg); }
+    35%{ transform:translateX(6px) rotate(2deg); }
+    55%{ transform:translateX(-5px) rotate(-1deg); }
+    75%{ transform:translateX(4px) rotate(1deg); }
+  }
+  .bug.hitFlash{ animation:hitShake .5s ease; filter:brightness(1.5) saturate(1.4); }
+
+  @keyframes bugDying{
+    0%{ transform:scale(1) rotate(0deg); opacity:1; filter:brightness(1) saturate(1); }
+    30%{ transform:scale(1.12) rotate(-4deg); opacity:1; filter:brightness(2) saturate(0); }
+    100%{ transform:scale(0.2) rotate(25deg); opacity:0; filter:brightness(2) saturate(0); }
+  }
+  .bug.dying{ animation:bugDying .5s ease-in forwards; pointer-events:none; z-index:7; }
+  @keyframes breakBitPop{
+    0%{ transform:translate(-50%,-50%) scale(0); opacity:0; }
+    35%{ transform:translate(calc(-50% + var(--bx)), calc(-50% + var(--by))) scale(1); opacity:1; }
+    100%{ transform:translate(calc(-50% + var(--bx2)), calc(-50% + var(--by2))) scale(0.3); opacity:0; }
+  }
+  .breakBits{ position:absolute; inset:0; pointer-events:none; overflow:visible; }
+  .breakBits span{
+    position:absolute; top:50%; left:50%; font-size:16px;
+    animation: breakBitPop .5s ease-in forwards;
+  }
+
+  @keyframes starPop{
+    0%{ transform:translate(-50%,-50%) scale(0) rotate(0deg); opacity:0; }
+    30%{ transform:translate(-50%,-50%) scale(1.3) rotate(20deg); opacity:1; }
+    100%{ transform:translate(-50%,-50%) scale(0.4) rotate(60deg) translateY(-24px); opacity:0; }
+  }
+  .hitStars{ position:absolute; inset:0; pointer-events:none; overflow:visible; }
+  .hitStars span{
+    position:absolute; top:50%; left:50%; font-size:22px; color:var(--gold);
+    text-shadow:0 0 6px #ff9d00, 0 0 2px #fff; animation:starPop .55s ease-out forwards;
+  }
+  .hitStars span:nth-child(1){ left:30%; animation-delay:0s; }
+  .hitStars span:nth-child(2){ left:70%; animation-delay:.06s; font-size:16px; }
+  .hitStars span:nth-child(3){ left:50%; top:30%; animation-delay:.12s; font-size:14px; }
+
+  @keyframes directHitFlash{
+    0%{ box-shadow:inset 0 0 0 0px #ff4d4d00; }
+    25%{ box-shadow:inset 0 0 30px 4px #ff4d4dcc; }
+    100%{ box-shadow:inset 0 0 0 0px #ff4d4d00; }
+  }
+  .playerPanel.directHit{ animation:directHitFlash .55s ease; }
+
+  @keyframes toastFade{
+    0%{ opacity:0; transform:translate(-50%,-50%) scale(0.9) rotate(-1deg); }
+    12%{ opacity:1; transform:translate(-50%,-50%) scale(1) rotate(0deg); }
+    82%{ opacity:1; transform:translate(-50%,-50%) scale(1) rotate(0deg); }
+    100%{ opacity:0; transform:translate(-50%,-50%) scale(0.96); }
+  }
+  .centerToast{
+    position:fixed; top:38%; left:50%; transform:translate(-50%,-50%);
+    background:linear-gradient(180deg,#3a2760,#2c1c4a); color:var(--gold); border:3px solid var(--gold);
+    padding:10px 18px; border-radius:16px; font-size:13px; font-weight:800;
+    width:min(96vw, 640px); max-width:96vw; box-sizing:border-box;
+    text-align:center; line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    z-index:80; pointer-events:none;
+    animation: toastFade 1.3s ease forwards; box-shadow:0 10px 26px #000a;
+  }
+  @media (orientation: landscape){
+    .centerToast{ font-size:12px; padding:8px 14px; }
+  }
+
+  .handCard{ width:106px; min-height:118px; border-radius:14px; padding:6px; font-size:11px; border:3px solid var(--line); background:#2a1c48; cursor:pointer; transition:.12s; box-shadow:0 4px 0 #00000040;}
+  .handCard:hover{ transform:translateY(-4px) rotate(1deg);}
+  .handCard.red{ border-color:var(--red);} .handCard.blue{ border-color:var(--blue);} .handCard.green{ border-color:var(--green);}
+  .handCard.enh{ border-color:var(--gold); background:#4a3a1c;}
+  .handCard.spell{ border-color:var(--purple); background:#33205a;}
+  .handCard .cn{ font-weight:800; font-size:11.5px; margin-bottom:2px;}
+  .handCard .cm{ color:var(--sub); font-size:10px; font-weight:600;}
+  .handCard .ce{ font-size:10px; margin-top:4px; color:#e7defe; line-height:1.35;}
+  .handCard.unaffordable{ opacity:.4;}
+
+  .logPanel{ background:#150b28; border:3px solid var(--line); border-radius:14px; padding:10px 12px; max-height:170px; overflow-y:auto; font-size:12px; line-height:1.65; color:#d9cff5;}
+  .logPanel .t{ color:var(--gold); font-weight:800;}
+  .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:12px 0;}
+  .modalOverlay{ position:fixed; inset:0; background:#10081fcc; display:flex; align-items:center; justify-content:center; z-index:50;}
+  .modal{ background:var(--panel); border:3px solid var(--gold); border-radius:18px; padding:18px 20px; max-width:440px; width:90%; box-shadow:0 14px 40px #000a;}
+  .modal h3{ color:var(--gold); margin-bottom:10px;}
+  .modal .opt{ display:block; width:100%; text-align:left; margin:6px 0; padding:9px 12px;}
+  .banner{ text-align:center; padding:60px 20px;}
+  .banner h1{ font-size:36px; color:var(--gold); text-shadow:0 3px 0 #00000055;}
+  .territoryDots{ display:flex; gap:3px;}
+  .territoryDots span{ width:9px; height:12px; border-radius:3px; background:var(--gold); border:1px solid #3a2000;}
+  .territoryDots span.used{ background:#3a2c5c; border-color:var(--line);}
+  .cardNameLink{ cursor:pointer; border-bottom:2px dotted var(--gold); font-weight:700;}
+  .cardNameLink:hover{ color:var(--gold); }
+
+  /* ---- 横向き・低い画面（スマホ横向きなど）向け最適化 ---- */
+  @media (orientation: landscape){
+    #app{ padding:8px 10px 30px; max-width:1400px; }
+    .topbar{ padding-bottom:6px; margin-bottom:8px; }
+    .topbar h1{ font-size:17px; }
+    .topbar .sub{ font-size:11px; }
+    .board{ flex-direction:row; flex-wrap:nowrap; align-items:stretch; }
+    .board .playerPanel{ flex:1 1 0; min-width:0; }
+    .playerPanel{ padding:7px 9px; }
+    .pHeader{ margin-bottom:5px; }
+    .statChips{ gap:7px; font-size:10.5px; }
+    .fieldZone{ min-height:96px; padding:4px; gap:5px; }
+    .feedZone{ min-height:26px; }
+    .feedChip{ width:20px; height:26px; }
+    .bug{ width:92px; min-height:88px; padding:5px; font-size:10px; }
+    .bug .bname{ font-size:10.5px; }
+    .handRow{ padding:4px 0; gap:5px; }
+    .handCard{ width:82px; min-height:92px; padding:5px; font-size:9.5px; }
+    .handCard .cn{ font-size:10px; }
+    .logPanel{ max-height:90px; font-size:11px; }
+    .controls{ margin:6px 0; }
+    h3{ margin-top:2px !important; font-size:12px !important; }
+  }
+  @media (orientation: landscape) and (max-height: 460px){
+    .fieldZone{ min-height:76px; }
+    .bug{ width:78px; min-height:74px; }
+    .handCard{ width:70px; min-height:78px; }
+    .logPanel{ max-height:60px; }
+    .cardGrid{ grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); }
+  }
+  /* デッキ編成画面も横向きで2カラム気味に詰める */
+  @media (orientation: landscape){
+    .cardGrid{ grid-template-columns:repeat(auto-fill,minmax(135px,1fr)); }
+    .deckStatus{ padding:7px 12px; }
+    .fieldZone, .handRow{ flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .bug, .handCard{ flex:0 0 auto; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =========================================================
+   蟲神器 ソロバトル（スターター＋ブースター第1弾・第2弾 収録プロトタイプ）
+   ※ 収録カードはスターターセット24種＋ブースター第1弾79種＋ブースター第2弾55種の計158種です（本家は全7弾500枚超）。
+   ※ ブースター第1弾・第2弾のうち、コスト/体力/攻撃力/色/レアリティは公式データベース準拠の正確な数値です。
+     ただし技の個別効果は、共通ルールとして定義されているキーワード技（＜とびだす＞＜擬態＞＜りんぷん＞＜毒霧噴射＞
+     ＜毒の体＞＜紋章＞等）のみ実際の効果を再現しており、それ以外の固有技（共食い・毒針・すくい投げなど）は
+     名称のみ引き継ぎ、通常攻撃として扱っています。強化/術カードは、無欠の息吹・蚰蜒の足切り・金蚉の甲冑・
+     兜虫の甲冑・電気虫の稲妻・金色の顎門・蟻の収穫・蟲祓いの煙幕を実装済み。口寄せの時蛹・白夜の羽化
+     （幼虫の羽化ギミック）は仕組みが複雑なため今回は簡易的な扱い（装着/効果なし）にしています。
+   ========================================================= */
+
+// ---------- カードデータ（スターターセット全24種・公開データベース準拠） ----------
+const CARDS = [
+  // 虫カード（赤）
+  {id:'ginyanma', name:'ギンヤンマ', color:'red', cost:5, type:'bug', rarity:'N', hp:1100, family:'dragonfly',
+    techs:[{name:'技', power:700}]},
+  {id:'ookamakiri', name:'オオカマキリ', color:'red', cost:4, type:'bug', rarity:'SR', hp:800, family:'mantis',
+    techs:[
+      {name:'カマ連撃', power:200, chain:true, desc:'攻撃後、相手の場に虫がいればもう一度使用できる。'},
+      {name:'共食い', power:800, needSacrifice:true, desc:'使用時、この虫以外の自分の虫を1つ選び破壊する。'}
+    ]},
+  {id:'koonyanma', name:'コオニヤンマ', color:'red', cost:4, type:'bug', rarity:'N', hp:800, family:'dragonfly',
+    techs:[{name:'技', power:500}]},
+  {id:'seakagokegumo', name:'セアカゴケグモ', color:'red', cost:2, type:'bug', rarity:'R', hp:400, family:'spider',
+    techs:[
+      {name:'かむ', power:100},
+      {name:'毒針', power:400, onceOnly:true, desc:'この技は1度だけ使用できる。'}
+    ]},
+  {id:'akiakane', name:'アキアカネ', color:'red', cost:2, type:'bug', rarity:'N', hp:500, family:'dragonfly',
+    techs:[{name:'技', power:200}]},
+  {id:'namitentou', name:'ナミテントウ', color:'red', cost:1, type:'bug', rarity:'N', hp:300, family:'ladybug',
+    techs:[{name:'技', power:100}]},
+  // 虫カード（青）
+  {id:'kabutomushi', name:'カブトムシ', color:'blue', cost:4, type:'bug', rarity:'SR', hp:800, family:'beetle',
+    techs:[
+      {name:'ツノ突進', power:500},
+      {name:'すくい投げ', power:0, flip:true, desc:'相手の虫を1つ選び、ターン終了時まで裏返す（いないものとして扱う）。'}
+    ]},
+  {id:'namiageha', name:'ナミアゲハ', color:'blue', cost:4, type:'bug', rarity:'R', hp:1100, family:'butterfly',
+    keyword:'りんぷん', keywordDesc:'相手はこの虫以外を攻撃できない（複数いる場合は相手がどれかを選ぶ）。',
+    techs:[{name:'技', power:300}]},
+  {id:'minminzemi', name:'ミンミンゼミ', color:'blue', cost:3, type:'bug', rarity:'N', hp:500, family:'cicada',
+    keyword:'とびだす', keywordDesc:'縄張りから引いた時、自分の場にとびだす持ちがいなければ場に出してよい。',
+    techs:[{name:'技', power:300}]},
+  {id:'kanabun', name:'カナブン', color:'blue', cost:1, type:'bug', rarity:'N', hp:300, family:'beetle',
+    techs:[{name:'技', power:100}]},
+  {id:'higurashi', name:'ヒグラシ', color:'blue', cost:2, type:'bug', rarity:'N', hp:200, family:'cicada',
+    techs:[{name:'技', power:200}]},
+  // 虫カード（緑）
+  {id:'tonosamabatta', name:'トノサマバッタ', color:'green', cost:5, type:'bug', rarity:'R', hp:1200, family:'grasshopper',
+    techs:[{name:'技', power:700}]},
+  {id:'namiageha_y', name:'ナミアゲハ（幼虫）', color:'green', cost:3, type:'bug', rarity:'R', hp:700, family:'larva',
+    techs:[
+      {name:'かじる', power:200},
+      {name:'くさいツノ', power:0, debuff:400, desc:'相手の虫を1つ選ぶ。次のターン、その虫の攻撃力を400下げる。'}
+    ]},
+  {id:'nanafushimodoki', name:'ナナフシモドキ', color:'green', cost:3, type:'bug', rarity:'R', hp:400, family:'stick',
+    keyword:'擬態', keywordDesc:'場に出た次の相手のターンは攻撃を受けない。ただしこれ以外に虫がいない時は直接攻撃を受ける。',
+    techs:[{name:'技', power:400}]},
+  {id:'nijuyahoshi', name:'ニジュウヤホシテントウ', color:'green', cost:2, type:'bug', rarity:'N', hp:300, family:'ladybug',
+    techs:[{name:'技', power:300}]},
+  {id:'wataaburamushi', name:'ワタアブラムシ', color:'green', cost:1, type:'bug', rarity:'N', hp:300, family:'aphid',
+    techs:[{name:'技', power:100}]},
+  // 強化カード
+  {id:'tamamushi_kouka', name:'玉虫色の羽化', type:'enhance', cost:2, rarity:'R',
+    desc:'この虫の色を赤か青か緑に変える。', effect:'recolor'},
+  {id:'harigane_douzure', name:'針金虫の道連れ', type:'enhance', cost:0, rarity:'N',
+    desc:'虫の攻撃によってこの虫が破壊された時、破壊した虫を破壊する。', effect:'retaliate'},
+  {id:'kamikiri_ooago', name:'天牛の大顎', type:'enhance', cost:0, rarity:'N',
+    desc:'この虫の攻撃力を300増やす。', effect:'atkup', value:300},
+  {id:'minomushi_kakuremino', name:'蓑虫みの隠れ蓑', type:'enhance', cost:0, rarity:'N',
+    desc:'この虫の体力を500増やす。', effect:'hpup', value:500},
+  // 術カード
+  {id:'niji_kakehashi', name:'虹の架け橋', type:'spell', cost:1, rarity:'R',
+    desc:'自分の捨て札の虫を1つ選び、手札に加える。', effect:'retrieve'},
+  {id:'jinkaimushi_bakunetsudan', name:'塵芥虫の爆熱弾', type:'spell', cost:1, rarity:'R',
+    desc:'相手の虫を1つ選び、600のダメージを与える。', effect:'burn600'},
+  {id:'mushi_ibuki', name:'蟲の息吹', type:'spell', cost:0, rarity:'N',
+    desc:'これを自分のエサ場に置く（このエサのコストはこのターン発生しない）。', effect:'freefeed'},
+  {id:'hikou_kyousou', name:'飛蝗の凶相', type:'spell', cost:0, rarity:'N',
+    desc:'ターン終了時まで、自分の全ての虫の攻撃力を200増やす。', effect:'teambuff200'},
+
+  // ---- ブースターパック第1弾（虫カードのみ・全79種／スターターと重複する「コオニヤンマ」は除外） ----
+  {id:'b1_001', name:'オオミノガ（幼虫）', color:'green', cost:1, type:'bug', rarity:'N', hp:300, family:'larva', pack:'第1弾',
+    techs:[{name:'技', power:100}]},
+  {id:'b1_002', name:'ツマグロオオヨコバイ', color:'green', cost:1, type:'bug', rarity:'N', hp:200, family:'cicada', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_003', name:'ハラヒシバッタ', color:'green', cost:1, type:'bug', rarity:'N', hp:300, family:'grasshopper', pack:'第1弾',
+    techs:[{name:'技', power:100}]},
+  {id:'b1_004', name:'マメコガネ', color:'green', cost:1, type:'bug', rarity:'N', hp:300, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_005', name:'カイコ（幼虫）', color:'green', cost:1, type:'bug', rarity:'N', hp:400, family:'larva', pack:'第1弾',
+    techs:[{name:'技', power:100}]},
+  {id:'b1_006', name:'オンブバッタ', color:'green', cost:1, type:'bug', rarity:'R', hp:300, family:'grasshopper', pack:'第1弾',
+    techs:[{name:'技', power:100}]},
+  {id:'b1_007', name:'ウバタマムシ', color:'green', cost:2, type:'bug', rarity:'N', hp:600, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:100}]},
+  {id:'b1_008', name:'コガネムシ', color:'green', cost:2, type:'bug', rarity:'N', hp:500, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_009', name:'イラガ（幼虫）', color:'green', cost:2, type:'bug', rarity:'N', hp:400, family:'larva', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_010', name:'ゴマダラオトシブミ', color:'green', cost:2, type:'bug', rarity:'N', hp:500, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_011', name:'オトシブミ', color:'green', cost:2, type:'bug', rarity:'N', hp:600, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:100}]},
+  {id:'b1_012', name:'アオクサカメムシ', color:'green', cost:2, type:'bug', rarity:'R', hp:400, family:'cicada', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_013', name:'コバネイナゴ', color:'green', cost:2, type:'bug', rarity:'R', hp:400, family:'grasshopper', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_014', name:'イボバッタ', color:'green', cost:3, type:'bug', rarity:'N', hp:400, family:'grasshopper', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_015', name:'オオムラサキ（幼虫）', color:'green', cost:3, type:'bug', rarity:'N', hp:700, family:'larva', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_016', name:'クロカタゾウムシ', color:'green', cost:3, type:'bug', rarity:'SR', hp:1000, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_017', name:'ヤマトタマムシ', color:'green', cost:3, type:'bug', rarity:'SR', hp:600, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_018', name:'ショウリョウバッタ', color:'green', cost:4, type:'bug', rarity:'N', hp:900, family:'grasshopper', pack:'第1弾',
+    techs:[{name:'技', power:500}]},
+  {id:'b1_019', name:'キアゲハ（幼虫）', color:'green', cost:4, type:'bug', rarity:'R', hp:900, family:'larva', pack:'第1弾',
+    techs:[{name:'技', power:400}]},
+  {id:'b1_020', name:'クワカミキリ', color:'green', cost:4, type:'bug', rarity:'R', hp:800, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:600}]},
+  {id:'b1_021', name:'ゴマダラカミキリ', color:'green', cost:4, type:'bug', rarity:'R', hp:700, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_022', name:'サバクトビバッタ', color:'green', cost:4, type:'bug', rarity:'SR', hp:1000, family:'grasshopper', pack:'第1弾',
+    techs:[{name:'技', power:400}]},
+  {id:'b1_023', name:'オオコノハムシ', color:'green', cost:4, type:'bug', rarity:'SR', hp:800, family:'stick', pack:'第1弾',
+    techs:[{name:'技', power:600}]},
+  {id:'b1_024', name:'シロスジカミキリ', color:'green', cost:5, type:'bug', rarity:'SR', hp:1300, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:700}]},
+  {id:'b1_025', name:'ジャイアントウェタ', color:'green', cost:5, type:'bug', rarity:'SR', hp:1300, family:'grasshopper', pack:'第1弾',
+    techs:[{name:'技', power:800}]},
+  {id:'b1_026', name:'テナガカミキリ', color:'green', cost:5, type:'bug', rarity:'SR', hp:1200, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:800}]},
+  {id:'b1_027', name:'オオキバウスバカミキリ', color:'green', cost:6, type:'bug', rarity:'LR', hp:1700, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:1200}]},
+  {id:'b1_028', name:'アオカナブン', color:'blue', cost:1, type:'bug', rarity:'N', hp:300, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_029', name:'ネブトクワガタ', color:'blue', cost:1, type:'bug', rarity:'N', hp:400, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:100}]},
+  {id:'b1_030', name:'モンキチョウ', color:'blue', cost:1, type:'bug', rarity:'N', hp:300, family:'butterfly', pack:'第1弾',
+    keyword:'紋章', keywordDesc:'自分の場にモンシロチョウかモンキチョウがいる間、攻撃力+300（このカード自身がいれば常に成立）。',
+    techs:[{name:'技', power:400}]},
+  {id:'b1_031', name:'モンシロチョウ', color:'blue', cost:1, type:'bug', rarity:'N', hp:300, family:'butterfly', pack:'第1弾',
+    keyword:'紋章', keywordDesc:'自分の場にモンシロチョウかモンキチョウがいる間、攻撃力+300（このカード自身がいれば常に成立）。',
+    techs:[{name:'技', power:400}]},
+  {id:'b1_032', name:'ニホンミツバチ', color:'blue', cost:1, type:'bug', rarity:'R', hp:400, family:'bee', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_033', name:'アカアシクワガタ', color:'blue', cost:2, type:'bug', rarity:'N', hp:300, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_034', name:'アカタテハ', color:'blue', cost:2, type:'bug', rarity:'N', hp:400, family:'butterfly', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_035', name:'アブラゼミ', color:'blue', cost:2, type:'bug', rarity:'N', hp:500, family:'cicada', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_036', name:'コクワガタ', color:'blue', cost:2, type:'bug', rarity:'N', hp:400, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_037', name:'キムネクマバチ', color:'blue', cost:2, type:'bug', rarity:'R', hp:400, family:'bee', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_038', name:'セイヨウミツバチ', color:'blue', cost:2, type:'bug', rarity:'R', hp:500, family:'bee', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_039', name:'クマゼミ', color:'blue', cost:3, type:'bug', rarity:'N', hp:700, family:'cicada', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_040', name:'ヤエヤママルバネクワガタ', color:'blue', cost:3, type:'bug', rarity:'N', hp:500, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:400}]},
+  {id:'b1_041', name:'オオスカシバ', color:'blue', cost:3, type:'bug', rarity:'N', hp:400, family:'moth', pack:'第1弾',
+    techs:[{name:'技', power:500}]},
+  {id:'b1_042', name:'オオゾウムシ', color:'blue', cost:3, type:'bug', rarity:'N', hp:800, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_043', name:'クロアゲハ', color:'blue', cost:3, type:'bug', rarity:'N', hp:700, family:'butterfly', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_044', name:'ノコギリクワガタ', color:'blue', cost:3, type:'bug', rarity:'R', hp:600, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:400}]},
+  {id:'b1_045', name:'アオスジアゲハ', color:'blue', cost:3, type:'bug', rarity:'R', hp:700, family:'butterfly', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_046', name:'ヒラタクワガタ', color:'blue', cost:4, type:'bug', rarity:'SR', hp:800, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:600}]},
+  {id:'b1_047', name:'オオムラサキ', color:'blue', cost:4, type:'bug', rarity:'R', hp:400, family:'butterfly', pack:'第1弾',
+    techs:[{name:'技', power:1000}]},
+  {id:'b1_048', name:'ニシキオオツバメガ', color:'blue', cost:4, type:'bug', rarity:'SR', hp:1000, family:'moth', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_049', name:'ミヤマクワガタ', color:'blue', cost:4, type:'bug', rarity:'SR', hp:900, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:700}]},
+  {id:'b1_050', name:'オオクワガタ', color:'blue', cost:5, type:'bug', rarity:'SR', hp:1300, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:800}]},
+  {id:'b1_051', name:'ギラファノコギリクワガタ', color:'blue', cost:5, type:'bug', rarity:'SR', hp:1200, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:900}]},
+  {id:'b1_052', name:'ゴライアスオオツノハナムグリ', color:'blue', cost:5, type:'bug', rarity:'SR', hp:800, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:500}]},
+  {id:'b1_053', name:'コーカサスオオカブト', color:'blue', cost:5, type:'bug', rarity:'SR', hp:1200, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:800}]},
+  {id:'b1_054', name:'ヘラクレスオオカブト', color:'blue', cost:6, type:'bug', rarity:'LR', hp:1600, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:1000}]},
+  {id:'b1_055', name:'クロオオアリ', color:'red', cost:1, type:'bug', rarity:'N', hp:400, family:'ant', pack:'第1弾',
+    techs:[{name:'技', power:100}]},
+  {id:'b1_056', name:'コカマキリ', color:'red', cost:1, type:'bug', rarity:'N', hp:200, family:'mantis', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_057', name:'ハナグモ', color:'red', cost:1, type:'bug', rarity:'N', hp:200, family:'spider', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_058', name:'クロヤマアリ', color:'red', cost:1, type:'bug', rarity:'N', hp:300, family:'ant', pack:'第1弾',
+    techs:[{name:'アリの大群', power:300, desc:'原作では場の状況に応じて威力が変動する技ですが、本プロトタイプでは簡易的に固定値としています。'}]},
+  {id:'b1_059', name:'ナナホシテントウ', color:'red', cost:1, type:'bug', rarity:'N', hp:300, family:'ladybug', pack:'第1弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b1_060', name:'ミツツボアリ', color:'red', cost:1, type:'bug', rarity:'SR', hp:200, family:'ant', pack:'第1弾',
+    techs:[{name:'技', power:100}]},
+  {id:'b1_061', name:'ハンミョウ', color:'red', cost:2, type:'bug', rarity:'N', hp:400, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_062', name:'シオカラトンボ', color:'red', cost:2, type:'bug', rarity:'N', hp:300, family:'dragonfly', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_063', name:'クロシデムシ', color:'red', cost:2, type:'bug', rarity:'R', hp:400, family:'beetle', pack:'第1弾',
+    techs:[{name:'死骸の山', power:300, desc:'原作では場の状況に応じて威力が変動する技ですが、本プロトタイプでは簡易的に固定値としています。'}]},
+  {id:'b1_064', name:'ヒアリ', color:'red', cost:2, type:'bug', rarity:'R', hp:400, family:'ant', pack:'第1弾',
+    techs:[{name:'毒針', power:300, desc:'原作では場の状況に応じて威力が変動する技ですが、本プロトタイプでは簡易的に固定値としています。'}]},
+  {id:'b1_065', name:'ハラビロカマキリ', color:'red', cost:3, type:'bug', rarity:'N', hp:600, family:'mantis', pack:'第1弾',
+    techs:[{name:'技', power:600}]},
+  {id:'b1_066', name:'オニグモ', color:'red', cost:3, type:'bug', rarity:'N', hp:700, family:'spider', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_067', name:'コガネグモ', color:'red', cost:3, type:'bug', rarity:'N', hp:600, family:'spider', pack:'第1弾',
+    techs:[{name:'技', power:400}]},
+  {id:'b1_068', name:'マイマイカブリ', color:'red', cost:3, type:'bug', rarity:'N', hp:400, family:'beetle', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_069', name:'アリジゴク', color:'red', cost:3, type:'bug', rarity:'R', hp:700, family:'larva', pack:'第1弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b1_070', name:'デスストーカー', color:'red', cost:3, type:'bug', rarity:'SR', hp:800, family:'scorpion', pack:'第1弾',
+    techs:[{name:'技', power:600}]},
+  {id:'b1_071', name:'シオヤアブ', color:'red', cost:4, type:'bug', rarity:'N', hp:800, family:'fly', pack:'第1弾',
+    techs:[{name:'技', power:500}]},
+  {id:'b1_072', name:'チョウセンカマキリ', color:'red', cost:4, type:'bug', rarity:'N', hp:800, family:'mantis', pack:'第1弾',
+    techs:[{name:'技', power:600}]},
+  {id:'b1_073', name:'ミイデラゴミムシ', color:'red', cost:4, type:'bug', rarity:'R', hp:700, family:'beetle', pack:'第1弾',
+    keyword:'毒霧噴射', keywordDesc:'虫の攻撃でこの虫が破壊された時、破壊した虫を手札に戻す。',
+    techs:[{name:'技', power:400}]},
+  {id:'b1_074', name:'ヤブキリ', color:'red', cost:4, type:'bug', rarity:'R', hp:600, family:'grasshopper', pack:'第1弾',
+    keyword:'とびだす', keywordDesc:'縄張りから引いた時、自分の場にとびだす持ちがいなければ場に出してよい。',
+    techs:[{name:'技', power:400}]},
+  {id:'b1_075', name:'トビズムカデ', color:'red', cost:5, type:'bug', rarity:'SR', hp:1300, family:'centipede', pack:'第1弾',
+    techs:[{name:'技', power:700}]},
+  {id:'b1_076', name:'オニヤンマ', color:'red', cost:5, type:'bug', rarity:'SR', hp:1200, family:'dragonfly', pack:'第1弾',
+    techs:[{name:'技', power:900}]},
+  {id:'b1_077', name:'メキシカンレッドニー', color:'red', cost:5, type:'bug', rarity:'SR', hp:1400, family:'spider', pack:'第1弾',
+    techs:[{name:'技', power:700}]},
+  {id:'b1_078', name:'リオック', color:'red', cost:5, type:'bug', rarity:'SR', hp:800, family:'scorpion', pack:'第1弾',
+    techs:[{name:'技', power:600}]},
+  {id:'b1_079', name:'ニセハナマオウカマキリ', color:'red', cost:6, type:'bug', rarity:'LR', hp:1600, family:'mantis', pack:'第1弾',
+    techs:[{name:'技', power:2000}]},
+
+  // ---- ブースターパック第2弾（虫カード45種＋強化5種＋術5種／全55種） ----
+  {id:'b2_001', name:'リュウジンオオムカデ', color:'red', cost:6, type:'bug', rarity:'LR', hp:1800, family:'centipede', pack:'第2弾',
+    techs:[{name:'翡翠色', power:700}]},
+  {id:'b2_002', name:'ハナカマキリ', color:'red', cost:4, type:'bug', rarity:'SR', hp:800, family:'mantis', pack:'第2弾',
+    techs:[{name:'擬態攻擊', power:600}]},
+  {id:'b2_003', name:'ダイオウサソリ', color:'red', cost:5, type:'bug', rarity:'SR', hp:1500, family:'scorpion', pack:'第2弾',
+    techs:[{name:'毒針', power:700}]},
+  {id:'b2_004', name:'ジョロウグモ', color:'red', cost:3, type:'bug', rarity:'R', hp:400, family:'spider', pack:'第2弾',
+    techs:[{name:'蜘蛛の巣', power:400}]},
+  {id:'b2_005', name:'キイロスズメバチ', color:'red', cost:4, type:'bug', rarity:'N', hp:700, family:'bee', pack:'第2弾',
+    techs:[{name:'毒針', power:700}]},
+  {id:'b2_006', name:'アシダカグモ', color:'red', cost:4, type:'bug', rarity:'N', hp:1000, family:'spider', pack:'第2弾',
+    techs:[{name:'技', power:400}]},
+  {id:'b2_007', name:'エメラルドゴキブリバチ', color:'red', cost:2, type:'bug', rarity:'SR', hp:200, family:'bee', pack:'第2弾',
+    techs:[{name:'操り針', power:200}]},
+  {id:'b2_008', name:'オオルリオサムシ', color:'red', cost:2, type:'bug', rarity:'R', hp:400, family:'beetle', pack:'第2弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b2_009', name:'ジグモ', color:'red', cost:2, type:'bug', rarity:'R', hp:300, family:'spider', pack:'第2弾',
+    techs:[{name:'かくれる', power:300}]},
+  {id:'b2_010', name:'ハラグロオオテントウ', color:'red', cost:2, type:'bug', rarity:'N', hp:300, family:'ladybug', pack:'第2弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b2_011', name:'オオナミザトウムシ', color:'red', cost:3, type:'bug', rarity:'R', hp:500, family:'spider', pack:'第2弾',
+    techs:[{name:'盲目攻撃', power:500}]},
+  {id:'b2_012', name:'キアシナガバチ', color:'red', cost:2, type:'bug', rarity:'N', hp:300, family:'bee', pack:'第2弾',
+    techs:[{name:'毒針', power:400}]},
+  {id:'b2_013', name:'ケラ', color:'red', cost:2, type:'bug', rarity:'N', hp:300, family:'grasshopper', pack:'第2弾',
+    techs:[{name:'あなを掘る', power:200}]},
+  {id:'b2_014', name:'ヨコヅナサシガメ', color:'red', cost:1, type:'bug', rarity:'R', hp:100, family:'beetle', pack:'第2弾',
+    techs:[{name:'吸血', power:100}]},
+  {id:'b2_015', name:'ハマベハサミムシ', color:'red', cost:1, type:'bug', rarity:'N', hp:200, family:'earwig', pack:'第2弾',
+    keyword:'とびだす', keywordDesc:'縄張りから引いた時、自分の場にとびだす持ちがいなければ場に出してよい。',
+    techs:[{name:'技', power:100}]},
+  {id:'b2_016', name:'アレクサンドラトリバネアゲハ', color:'blue', cost:6, type:'bug', rarity:'LR', hp:800, family:'butterfly', pack:'第2弾',
+    techs:[{name:'不死蝶の舞', power:1000}]},
+  {id:'b2_017', name:'アトラスオオカブト', color:'blue', cost:5, type:'bug', rarity:'SR', hp:1200, family:'beetle', pack:'第2弾',
+    techs:[{name:'ツノ串刺し', power:700}]},
+  {id:'b2_018', name:'レックスゾウカブト', color:'blue', cost:5, type:'bug', rarity:'R', hp:1400, family:'beetle', pack:'第2弾',
+    techs:[{name:'技', power:600}]},
+  {id:'b2_019', name:'テイオウゼミ', color:'blue', cost:5, type:'bug', rarity:'SR', hp:1000, family:'cicada', pack:'第2弾',
+    techs:[{name:'セミの帝王', power:600}]},
+  {id:'b2_020', name:'エゾゼミ', color:'blue', cost:4, type:'bug', rarity:'R', hp:700, family:'cicada', pack:'第2弾',
+    techs:[{name:'鳴く', power:600}]},
+  {id:'b2_021', name:'パリーフタマタクワガタ', color:'blue', cost:3, type:'bug', rarity:'R', hp:500, family:'beetle', pack:'第2弾',
+    techs:[{name:'フタマタバサミ', power:400}]},
+  {id:'b2_022', name:'ディディエールシカクワガタ', color:'blue', cost:3, type:'bug', rarity:'R', hp:500, family:'beetle', pack:'第2弾',
+    techs:[{name:'シカツノバサミ', power:400}]},
+  {id:'b2_023', name:'キアゲハ', color:'blue', cost:5, type:'bug', rarity:'R', hp:1400, family:'butterfly', pack:'第2弾',
+    keyword:'りんぷん', keywordDesc:'相手はこの虫以外を攻撃できない（複数いる場合は相手がどれかを選ぶ）。',
+    techs:[{name:'技', power:500}]},
+  {id:'b2_024', name:'オウゴンオニクワガタ', color:'blue', cost:2, type:'bug', rarity:'SR', hp:300, family:'beetle', pack:'第2弾',
+    techs:[{name:'鬼バサミ', power:400}]},
+  {id:'b2_025', name:'クラウディーナミイロタテハ', color:'blue', cost:3, type:'bug', rarity:'N', hp:400, family:'butterfly', pack:'第2弾',
+    techs:[{name:'かくれる', power:400}]},
+  {id:'b2_026', name:'アサギマダラ', color:'blue', cost:3, type:'bug', rarity:'N', hp:700, family:'butterfly', pack:'第2弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b2_027', name:'サツマニシキ', color:'blue', cost:3, type:'bug', rarity:'N', hp:400, family:'moth', pack:'第2弾',
+    techs:[{name:'毒の泡', power:300}]},
+  {id:'b2_028', name:'ツクツクボウシ', color:'blue', cost:2, type:'bug', rarity:'N', hp:300, family:'cicada', pack:'第2弾',
+    techs:[{name:'技', power:300}]},
+  {id:'b2_029', name:'ベニシジミ', color:'blue', cost:1, type:'bug', rarity:'N', hp:200, family:'butterfly', pack:'第2弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b2_030', name:'チッチゼミ', color:'blue', cost:1, type:'bug', rarity:'N', hp:100, family:'cicada', pack:'第2弾',
+    keyword:'とびだす', keywordDesc:'縄張りから引いた時、自分の場にとびだす持ちがいなければ場に出してよい。',
+    techs:[{name:'技', power:200}]},
+  {id:'b2_031', name:'キマダラドクバッタ', color:'green', cost:6, type:'bug', rarity:'LR', hp:1200, family:'grasshopper', pack:'第2弾',
+    techs:[{name:'トウワタ毒', power:1000}]},
+  {id:'b2_032', name:'アレクサンドラトリバネアゲハ（幼虫）', color:'green', cost:3, type:'bug', rarity:'R', hp:500, family:'larva', pack:'第2弾',
+    techs:[{name:'技', power:400}]},
+  {id:'b2_033', name:'ロードハウナナフシ', color:'green', cost:5, type:'bug', rarity:'SR', hp:1200, family:'stick', pack:'第2弾',
+    keyword:'擬態', keywordDesc:'場に出た次の相手のターンは攻撃を受けない。ただしこれ以外に虫がいない時は直接攻撃を受ける。',
+    techs:[{name:'技', power:800}]},
+  {id:'b2_034', name:'ヘラクレスサン（幼虫）', color:'green', cost:5, type:'bug', rarity:'SR', hp:1300, family:'larva', pack:'第2弾',
+    techs:[{name:'大食漢', power:600}]},
+  {id:'b2_035', name:'ヤママユ（幼虫）', color:'green', cost:4, type:'bug', rarity:'R', hp:800, family:'larva', pack:'第2弾',
+    techs:[{name:'技', power:700}]},
+  {id:'b2_036', name:'ウスバカミキリ', color:'green', cost:4, type:'bug', rarity:'N', hp:700, family:'beetle', pack:'第2弾',
+    techs:[{name:'技', power:600}]},
+  {id:'b2_037', name:'クルマバッタ', color:'green', cost:4, type:'bug', rarity:'N', hp:400, family:'grasshopper', pack:'第2弾',
+    keyword:'とびだす', keywordDesc:'縄張りから引いた時、自分の場にとびだす持ちがいなければ場に出してよい。',
+    techs:[{name:'技', power:500}]},
+  {id:'b2_038', name:'クビアカツヤカミキリ', color:'green', cost:4, type:'bug', rarity:'N', hp:800, family:'beetle', pack:'第2弾',
+    techs:[{name:'技', power:500}]},
+  {id:'b2_039', name:'ルリボシカミキリ', color:'green', cost:3, type:'bug', rarity:'N', hp:400, family:'beetle', pack:'第2弾',
+    techs:[{name:'技', power:500}]},
+  {id:'b2_040', name:'プラチナコガネ', color:'green', cost:1, type:'bug', rarity:'SR', hp:200, family:'beetle', pack:'第2弾',
+    techs:[{name:'技', power:200}]},
+  {id:'b2_041', name:'アサギマダラ（幼虫）', color:'green', cost:2, type:'bug', rarity:'N', hp:400, family:'larva', pack:'第2弾',
+    keyword:'毒の体', keywordDesc:'「毒」とつく技のダメージを0にする。',
+    techs:[{name:'技', power:300}]},
+  {id:'b2_042', name:'カレハバッタ', color:'green', cost:2, type:'bug', rarity:'R', hp:200, family:'grasshopper', pack:'第2弾',
+    keyword:'擬態', keywordDesc:'場に出た次の相手のターンは攻撃を受けない。ただしこれ以外に虫がいない時は直接攻撃を受ける。',
+    techs:[{name:'技', power:300}]},
+  {id:'b2_043', name:'クロカミキリ', color:'green', cost:2, type:'bug', rarity:'N', hp:400, family:'beetle', pack:'第2弾',
+    techs:[{name:'首を鳴らす', power:200}]},
+  {id:'b2_044', name:'トビイロウンカ', color:'green', cost:1, type:'bug', rarity:'N', hp:200, family:'cicada', pack:'第2弾',
+    keyword:'とびだす', keywordDesc:'縄張りから引いた時、自分の場にとびだす持ちがいなければ場に出してよい。',
+    techs:[{name:'技', power:100}]},
+  {id:'b2_045', name:'シロオビアワフキ（幼虫）', color:'green', cost:1, type:'bug', rarity:'N', hp:500, family:'larva', pack:'第2弾',
+    techs:[{name:'泡のまもり', power:0}]},
+  {id:'b2_046', name:'無欠の息吹', type:'enhance', cost:1, rarity:'R', pack:'第2弾',
+    desc:'この虫は、色による2倍のダメージを受けない。', effect:'noWeakness'},
+  {id:'b2_047', name:'蚰蜒の足切り', type:'enhance', cost:0, rarity:'N', pack:'第2弾',
+    desc:'この虫が虫の攻撃を受けたとき、受けたダメージを0にし、これを破壊する。※技の効果は無効にしない。', effect:'sacrificialShield'},
+  {id:'b2_048', name:'金蚉の甲冑', type:'enhance', cost:1, rarity:'R', pack:'第2弾',
+    desc:'この虫の体力と攻撃力を300増やす。', effect:'atkhpup300'},
+  {id:'b2_049', name:'兜虫の甲冑', type:'enhance', cost:2, rarity:'LR', pack:'第2弾',
+    desc:'この虫の体力と攻撃力を500増やす。', effect:'atkhpup500'},
+  {id:'b2_050', name:'口寄せの時蛹', type:'enhance', cost:4, rarity:'SR', pack:'第2弾',
+    desc:'手札から虫カードを1つ選び、これをつけて場に出す。この虫はこれがついている限り、攻撃できない。次の相手のターン終了時にこれを破壊する。', effect:'chrysalisSummon'},
+  {id:'b2_051', name:'白夜の羽化', type:'spell', cost:0, rarity:'R', pack:'第2弾',
+    desc:'自分の場に出ている（幼虫）と書かれた虫を1つ選んでエサ場に置き、その虫と同名の（幼虫）と書かれていない虫を手札から場に出す。※このエサのコストはこのターン発生しない。', effect:'molt'},
+  {id:'b2_052', name:'蟲祓いの煙幕', type:'spell', cost:0, rarity:'N', pack:'第2弾',
+    desc:'ターン終了時まで、相手が縄張りを引いたとき＜とびだす＞は使用できない。', effect:'blockTobidasu'},
+  {id:'b2_053', name:'電気虫の稲妻', type:'spell', cost:2, rarity:'R', pack:'第2弾',
+    desc:'相手の虫を1つ選ぶ。その虫に1000のダメージを与える。', effect:'burn1000'},
+  {id:'b2_054', name:'金色の顎門', type:'spell', cost:0, rarity:'R', pack:'第2弾',
+    desc:'自分の虫を1つ選ぶ。ターン終了時まで、その虫の攻撃力を500増やす。', effect:'buff500single'},
+  {id:'b2_055', name:'蟻の収穫', type:'spell', cost:0, rarity:'N', pack:'第2弾',
+    desc:'自分のエサ場にある強化カードか術カードを1つ選び、手札に戻す。', effect:'returnFeedCard'},
+];
+CARDS.forEach(c=>{ if(!c.pack) c.pack = 'スターター'; });
+const CARD_MAP = Object.fromEntries(CARDS.map(c=>[c.id,c]));
+const COLOR_JP = {red:'赤', blue:'青', green:'緑'};
+const COLOR_HEX = {red:'#ff5d6c', blue:'#29c5f6', green:'#6be675'};
+
+// ---------- 公式データベース（外部サイト）へのリンクを組み立てる ----------
+// ※実物のカード画像は著作権保護されているため本アプリには一切保存/複製しない。
+//   代わりにオリジナルの簡易アイコンをその場表示し、実物を見たい場合は
+//   ファン運営の「蟲神器 最強データベース」の該当カードページへ外部リンクする。
+function officialUrl(card){
+  const rarityLc = (card.rarity||'').toLowerCase();
+  const slug = `【蟲神器】${card.name}（${rarityLc}）のカード詳細`;
+  return 'https://www.mushijingi-cardlist.com/' + encodeURIComponent(slug) + '/';
+}
+
+// ---------- オリジナルの簡易アイコン(SVG) ----------
+// 実物のカードイラストは使わず、虫の系統を単純な図形で表した独自アイコンを生成する。
+function iconSvg(card){
+  const hex = card.type==='bug' ? COLOR_HEX[card.color] : (card.type==='enhance' ? '#ffc93c' : '#c084fc');
+  const fam = card.family || (card.type==='enhance' ? 'enhance' : card.type==='spell' ? 'spell' : 'generic');
+  const shapes = {
+    dragonfly: `<ellipse cx="60" cy="66" rx="6" ry="30" fill="${hex}"/><rect x="57" y="40" width="6" height="46" rx="3" fill="${hex}"/>
+      <ellipse cx="34" cy="46" rx="26" ry="7" fill="${hex}" opacity="0.55" transform="rotate(-18 34 46)"/>
+      <ellipse cx="86" cy="46" rx="26" ry="7" fill="${hex}" opacity="0.55" transform="rotate(18 86 46)"/>
+      <circle cx="60" cy="34" r="9" fill="${hex}"/>`,
+    mantis: `<path d="M60 20c-7 0-11 6-11 13 0 5 3 9 3 9l-16 10c-3 2-3 6 0 8l4 3-3 6 8-2 3 6 5-8 12 4-4-9c8-1 14-8 14-17 0-11-7-20-15-23z" fill="${hex}"/>
+      <ellipse cx="60" cy="70" rx="7" ry="26" fill="${hex}"/>
+      <circle cx="60" cy="17" r="7" fill="${hex}"/>`,
+    spider: `<ellipse cx="60" cy="62" rx="16" ry="20" fill="${hex}"/><circle cx="60" cy="38" r="10" fill="${hex}"/>
+      ${[-1,1].map(s=>[0,1,2,3].map(i=>`<line x1="60" y1="60" x2="${60+s*(38+i*8)}" y2="${40+i*14}" stroke="${hex}" stroke-width="4" stroke-linecap="round"/>`).join('')).join('')}`,
+    ladybug: `<ellipse cx="60" cy="64" rx="26" ry="24" fill="${hex}"/><path d="M60 40v48" stroke="#241f13" stroke-width="3"/>
+      <circle cx="60" cy="34" r="10" fill="#241f13"/>
+      <circle cx="48" cy="56" r="4" fill="#241f13"/><circle cx="72" cy="56" r="4" fill="#241f13"/>
+      <circle cx="46" cy="74" r="4" fill="#241f13"/><circle cx="74" cy="74" r="4" fill="#241f13"/>`,
+    beetle: `<ellipse cx="60" cy="68" rx="22" ry="26" fill="${hex}"/><path d="M60 44v48" stroke="#241f13" stroke-width="3"/>
+      <path d="M50 30c0-10 6-18 10-18s10 8 10 18" stroke="${hex}" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <circle cx="60" cy="34" r="7" fill="${hex}"/>`,
+    butterfly: `<path d="M58 30c-14-18-44-10-40 10 3 15 22 16 40 4z" fill="${hex}"/>
+      <path d="M62 30c14-18 44-10 40 10-3 15-22 16-40 4z" fill="${hex}"/>
+      <path d="M58 60c-12 16-38 12-38-4 0-12 16-16 38-6z" fill="${hex}" opacity="0.75"/>
+      <path d="M62 60c12 16 38 12 38-4 0-12-16-16-38-6z" fill="${hex}" opacity="0.75"/>
+      <rect x="57" y="24" width="6" height="56" rx="3" fill="#241f13"/>`,
+    cicada: `<path d="M60 30c-9 0-15 10-15 26 0 20 8 34 15 34s15-14 15-34c0-16-6-26-15-26z" fill="${hex}"/>
+      <path d="M45 40c-16-4-30 6-24 22 5 13 22 12 30 0z" fill="${hex}" opacity="0.5"/>
+      <path d="M75 40c16-4 30 6 24 22-5 13-22 12-30 0z" fill="${hex}" opacity="0.5"/>
+      <circle cx="52" cy="26" r="4" fill="#241f13"/><circle cx="68" cy="26" r="4" fill="#241f13"/>`,
+    grasshopper: `<ellipse cx="52" cy="58" rx="24" ry="10" fill="${hex}"/><circle cx="26" cy="54" r="9" fill="${hex}"/>
+      <path d="M70 60c10 6 20 4 26 20-10 2-18-4-26-8z" fill="${hex}"/>
+      <path d="M70 55c6-16 4-4 6-30" stroke="${hex}" stroke-width="4" fill="none" stroke-linecap="round"/>`,
+    stick: `<line x1="20" y1="60" x2="100" y2="60" stroke="${hex}" stroke-width="7" stroke-linecap="round"/>
+      <line x1="30" y1="60" x2="20" y2="72" stroke="${hex}" stroke-width="4" stroke-linecap="round"/>
+      <line x1="55" y1="60" x2="45" y2="74" stroke="${hex}" stroke-width="4" stroke-linecap="round"/>
+      <line x1="80" y1="60" x2="70" y2="46" stroke="${hex}" stroke-width="4" stroke-linecap="round"/>`,
+    aphid: `<ellipse cx="60" cy="64" rx="16" ry="20" fill="${hex}"/><circle cx="60" cy="40" r="8" fill="${hex}"/>
+      <line x1="55" y1="34" x2="48" y2="24" stroke="${hex}" stroke-width="3" stroke-linecap="round"/>
+      <line x1="65" y1="34" x2="72" y2="24" stroke="${hex}" stroke-width="3" stroke-linecap="round"/>`,
+    larva: `<path d="M25 66c0-10 8-14 17-14s14 6 21 6 12-6 21-6 16 4 16 14-8 14-16 14-12-6-21-6-14 6-21 6-17-4-17-14z" fill="${hex}"/>
+      <circle cx="30" cy="66" r="4" fill="#241f13"/>`,
+    ant: `<circle cx="30" cy="60" r="12" fill="${hex}"/><circle cx="58" cy="58" r="10" fill="${hex}"/>
+      <circle cx="84" cy="56" r="14" fill="${hex}"/><circle cx="86" cy="46" r="7" fill="${hex}"/>
+      <line x1="42" y1="60" x2="48" y2="58" stroke="${hex}" stroke-width="3"/>
+      <line x1="68" y1="57" x2="74" y2="56" stroke="${hex}" stroke-width="3"/>
+      ${[0,1,2].map(i=>`<line x1="58" y1="${52+i*8}" x2="${40-i*4}" y2="${70+i*6}" stroke="${hex}" stroke-width="3" stroke-linecap="round"/><line x1="58" y1="${52+i*8}" x2="${76+i*4}" y2="${70+i*6}" stroke="${hex}" stroke-width="3" stroke-linecap="round"/>`).join('')}`,
+    bee: `<ellipse cx="60" cy="62" rx="20" ry="18" fill="${hex}"/>
+      <path d="M46 52h28M42 62h36M46 72h28" stroke="#3a2c10" stroke-width="4"/>
+      <circle cx="60" cy="36" r="9" fill="${hex}"/>
+      <ellipse cx="38" cy="46" rx="16" ry="9" fill="${hex}" opacity="0.5" transform="rotate(-20 38 46)"/>
+      <ellipse cx="82" cy="46" rx="16" ry="9" fill="${hex}" opacity="0.5" transform="rotate(20 82 46)"/>`,
+    fly: `<ellipse cx="60" cy="60" rx="14" ry="16" fill="${hex}"/><circle cx="60" cy="38" r="12" fill="${hex}"/>
+      <circle cx="54" cy="36" r="4" fill="#1a1409"/><circle cx="66" cy="36" r="4" fill="#1a1409"/>
+      <ellipse cx="36" cy="52" rx="20" ry="9" fill="${hex}" opacity="0.45" transform="rotate(-14 36 52)"/>
+      <ellipse cx="84" cy="52" rx="20" ry="9" fill="${hex}" opacity="0.45" transform="rotate(14 84 52)"/>`,
+    moth: `<path d="M58 34c-10-14-36-8-32 8 3 12 18 13 32 4z" fill="${hex}" opacity="0.85"/>
+      <path d="M62 34c10-14 36-8 32 8-3 12-18 13-32 4z" fill="${hex}" opacity="0.85"/>
+      <path d="M58 58c-8 12-30 10-30-3 0-9 13-13 30-5z" fill="${hex}" opacity="0.55"/>
+      <path d="M62 58c8 12 30 10 30-3 0-9-13-13-30-5z" fill="${hex}" opacity="0.55"/>
+      <rect x="57" y="26" width="6" height="48" rx="3" fill="#241f13"/>`,
+    centipede: `<line x1="16" y1="60" x2="104" y2="60" stroke="${hex}" stroke-width="8" stroke-linecap="round"/>
+      ${[0,1,2,3,4,5].map(i=>`<line x1="${24+i*13}" y1="60" x2="${18+i*13}" y2="74" stroke="${hex}" stroke-width="3" stroke-linecap="round"/><line x1="${24+i*13}" y1="60" x2="${30+i*13}" y2="74" stroke="${hex}" stroke-width="3" stroke-linecap="round"/>`).join('')}
+      <circle cx="16" cy="60" r="7" fill="${hex}"/>`,
+    scorpion: `<ellipse cx="48" cy="64" rx="18" ry="14" fill="${hex}"/><circle cx="26" cy="60" r="9" fill="${hex}"/>
+      <path d="M64 58c14-2 24 4 28-6-6 14-18 12-24 20z" fill="${hex}"/>
+      <path d="M62 52c10-14 4-2 20-24" stroke="${hex}" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <line x1="20" y1="52" x2="8" y2="44" stroke="${hex}" stroke-width="3" stroke-linecap="round"/>
+      <line x1="20" y1="68" x2="8" y2="72" stroke="${hex}" stroke-width="3" stroke-linecap="round"/>`,
+    earwig: `<ellipse cx="55" cy="62" rx="30" ry="9" fill="${hex}"/>
+      <path d="M85 62c8-10 20-12 22-2-10 2-14 6-22 8z" fill="${hex}"/>
+      <path d="M85 62c8 10 20 12 22 2-10-2-14-6-22-8z" fill="${hex}"/>
+      <circle cx="27" cy="62" r="8" fill="${hex}"/>
+      <line x1="20" y1="56" x2="10" y2="48" stroke="${hex}" stroke-width="3" stroke-linecap="round"/>`,
+    enhance: `<path d="M60 22c14 10 26 24 26 40a26 26 0 1 1-52 0c0-16 12-30 26-40z" fill="${hex}"/>
+      <path d="M60 40v42" stroke="#2b2716" stroke-width="3"/>`,
+    spell: `<path d="M44 26h32l-6 30 18 12-42 26 10-32-22-10z" fill="${hex}"/>`,
+    generic: `<circle cx="60" cy="60" r="30" fill="${hex}"/>`,
+  };
+  return `<svg viewBox="0 0 120 100" width="100%" height="100%">${shapes[fam]||shapes.generic}</svg>`;
+}
+
+// ---------- カード詳細モーダル ----------
+let cardInfoModal = null; // cardId
+// 実カードの写真/画像URL。ブラウザのメモリ上にのみ保持し、
+// ファイルへの書き出しや外部サーバーへの保存は一切行わない。
+// ページを閉じる/リロードすると消える（意図的な仕様）。
+let myCardPhotos = {}; // cardId -> dataURL（アップロードした写真）
+let myCardImageUrls = {}; // cardId -> URL文字列（ユーザーが貼り付けたURL）
+function showCardInfo(cardId){ cardInfoModal = cardId; render(); }
+function closeCardInfo(){ cardInfoModal = null; render(); }
+function handlePhotoUpload(cardId, file){
+  if(!file || !file.type || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    myCardPhotos[cardId] = reader.result;
+    delete myCardImageUrls[cardId]; // 片方を設定したらもう片方は解除
+    render();
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto(cardId){
+  delete myCardPhotos[cardId];
+  render();
+}
+function setImageUrl(cardId, url){
+  url = (url||'').trim();
+  if(!url) return;
+  myCardImageUrls[cardId] = url;
+  delete myCardPhotos[cardId]; // 片方を設定したらもう片方は解除
+  render();
+}
+function removeImageUrl(cardId){
+  delete myCardImageUrls[cardId];
+  render();
+}
+function cardInfoModalHtml(){
+  const c = CARD_MAP[cardInfoModal];
+  if(!c) return '';
+  const url = officialUrl(c);
+  const myPhoto = myCardPhotos[c.id];
+  const myUrl = myCardImageUrls[c.id];
+  const displaySrc = myPhoto || myUrl;
+  let statLine = '';
+  if(c.type==='bug'){
+    statLine = `<div class="hint">${COLOR_JP[c.color]}／コスト${c.cost}／体力${c.hp}／レアリティ${c.rarity}／${c.pack}</div>`;
+  } else {
+    statLine = `<div class="hint">${c.type==='enhance'?'強化カード':'術カード'}／コスト${c.cost}／レアリティ${c.rarity}／${c.pack}</div>`;
+  }
+  let effectLines = '';
+  if(c.type==='bug'){
+    effectLines = c.techs.map(t=>`<div class="tech">技：${t.name}（${t.power}）${t.desc?'　'+t.desc:''}</div>`).join('');
+    if(c.keyword) effectLines += `<div class="tech">＜${c.keyword}＞：${c.keywordDesc}</div>`;
+  } else {
+    effectLines = `<div class="tech">${c.desc}</div>`;
+  }
+  return `
+  <div class="modalOverlay" id="cardInfoOverlay">
+    <div class="modal" style="max-width:340px;">
+      <h3>${c.name}</h3>
+      <div style="width:150px;height:125px;margin:0 auto 10px;background:#0000002e;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        ${displaySrc ? `<img src="${displaySrc}" alt="${c.name}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+          <div class="hint" style="display:none;align-items:center;justify-content:center;height:100%;">画像を読み込めませんでした</div>`
+          : iconSvg(c)}
+      </div>
+      ${myPhoto
+        ? `<div class="hint" style="text-align:center;margin-bottom:6px;">あなたがアップロードした写真です（この端末・このセッション限り）</div>`
+        : myUrl
+        ? `<div class="hint" style="text-align:center;margin-bottom:6px;word-break:break-all;">貼り付けたURLを表示中：${myUrl}</div>`
+        : `<div class="hint" style="text-align:center;margin-bottom:6px;">※本アプリのオリジナル簡易アイコンです（実物のカードイラストではありません）</div>`
+      }
+      ${statLine}
+      ${effectLines}
+      <input type="file" accept="image/*" id="photoUploadInput" style="display:none;">
+      <button class="opt" id="uploadPhotoBtn" style="margin-top:12px;">${myPhoto?'📷 手持ちの写真を差し替える':'📷 手持ちのカードを撮影/アップロード'}</button>
+      ${myPhoto ? `<button class="opt danger" id="removePhotoBtn" style="margin-top:6px;">写真を削除</button>` : ''}
+
+      <div style="margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;">
+        <div class="hint" style="margin-bottom:6px;">画像URLを貼り付けて表示：</div>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="imageUrlInput" placeholder="https://..." value="${myUrl?myUrl.replace(/"/g,'&quot;'):''}"
+            style="flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:7px 8px;font-size:12px;">
+          <button class="opt" id="applyImageUrlBtn" style="margin:0;width:auto;padding:7px 12px;">表示</button>
+        </div>
+        ${myUrl ? `<button class="opt danger" id="removeImageUrlBtn" style="margin-top:6px;">URL表示を解除</button>` : ''}
+      </div>
+
+      <div class="hint" style="text-align:center;margin-top:8px;">アップロードした写真／貼り付けたURLはブラウザのメモリ上に置かれるだけで、保存・送信されません。この画面を離れる（リロードする）と消えます。どのURLを表示するかはご自身の判断でお願いします。</div>
+      <a href="${url}" target="_blank" rel="noopener" class="opt" style="display:block;text-align:center;text-decoration:none;margin-top:12px;background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:6px;padding:9px 12px;">実際のカード画像を公式データベースで見る ↗</a>
+      <button class="opt" id="closeCardInfoBtn" style="margin-top:8px;">閉じる</button>
+    </div>
+  </div>`;
+}
+function attachCardInfoHandlers(){
+  document.querySelectorAll('[data-showcard]').forEach(el=>{
+    el.onclick = (e)=>{ e.stopPropagation(); showCardInfo(el.getAttribute('data-showcard')); };
+  });
+  const closeBtn = document.getElementById('closeCardInfoBtn');
+  if(closeBtn) closeBtn.onclick = ()=> closeCardInfo();
+  const overlay = document.getElementById('cardInfoOverlay');
+  if(overlay) overlay.onclick = (e)=>{ if(e.target===overlay) closeCardInfo(); };
+
+  const uploadBtn = document.getElementById('uploadPhotoBtn');
+  const uploadInput = document.getElementById('photoUploadInput');
+  if(uploadBtn && uploadInput){
+    uploadBtn.onclick = ()=> uploadInput.click();
+    uploadInput.onchange = (e)=>{
+      const file = e.target.files && e.target.files[0];
+      if(file && cardInfoModal) handlePhotoUpload(cardInfoModal, file);
+      uploadInput.value = '';
+    };
+  }
+  const removeBtn = document.getElementById('removePhotoBtn');
+  if(removeBtn) removeBtn.onclick = ()=>{ if(cardInfoModal) removePhoto(cardInfoModal); };
+
+  const urlInput = document.getElementById('imageUrlInput');
+  const applyUrlBtn = document.getElementById('applyImageUrlBtn');
+  if(applyUrlBtn && urlInput){
+    applyUrlBtn.onclick = ()=>{ if(cardInfoModal) setImageUrl(cardInfoModal, urlInput.value); };
+  }
+  const removeUrlBtn = document.getElementById('removeImageUrlBtn');
+  if(removeUrlBtn) removeUrlBtn.onclick = ()=>{ if(cardInfoModal) removeImageUrl(cardInfoModal); };
+}
+
+// 三すくみ: 赤→緑, 緑→青, 青→赤 (それぞれ2倍)
+function beats(a,b){ return (a==='red'&&b==='green')||(a==='green'&&b==='blue')||(a==='blue'&&b==='red'); }
+
+// 属性有利の2倍ダメージが実際に発生するか（無欠の息吹を装着した虫は対象外）
+function colorAdvantageApplies(attackerColor, target){
+  if(target.attachments.some(aid=>CARD_MAP[aid].effect==='noWeakness')) return false;
+  return beats(attackerColor, bugColor(target));
+}
+// 毒の体：「毒」とつく技のダメージを0にする
+function isPoisonBlocked(target, techName){
+  return CARD_MAP[target.cardId].keyword==='毒の体' && !!techName && techName.includes('毒');
+}
+
+const MAX_COPIES = 3;
+const DECK_SIZE = 20;
+const TERRITORY_SIZE = 6;
+const START_HAND = 4;
+
+// ---------- ユーティリティ ----------
+let uidCounter = 1;
+function uid(){ return 'u'+(uidCounter++); }
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+
+// ---------- アプリ状態 ----------
+let screen = 'deck'; // deck | opponent | game
+let deckCounts = {}; // cardId -> qty (player's chosen deck)
+CARDS.filter(c=>c.type==='bug').forEach(c=> deckCounts[c.id] = 0);
+CARDS.filter(c=>c.type!=='bug').forEach(c=> deckCounts[c.id] = 0);
+let filterType = 'all';
+let filterPack = 'all';
+let filterColor = 'all'; // all | red | blue | green
+let filterSelection = 'all'; // all | selected | unselected
+let deckName = ''; // 保存時に付ける名前
+
+let G = null; // ゲーム状態
+let pendingUI = null; // モーダル選択待ち { title, options:[{label,onPick}] }
+let resultText = '';
+let actionSnapshot = null; // 選択キャンセル用のロールバックスナップショット
+
+// ---------- 攻撃演出(エフェクト)状態 ----------
+let fx = { attackerUid:null, attackDir:null, hitUids:[], directHitOwnerIdx:null };
+let fxTimer = null;
+function flashAttackFx(attackerUid, isMe, hitUids, directHitOwnerIdx){
+  fx = {
+    attackerUid: attackerUid || null,
+    attackDir: isMe ? 'up' : 'down',
+    hitUids: hitUids || [],
+    directHitOwnerIdx: (directHitOwnerIdx!=null) ? directHitOwnerIdx : null,
+  };
+  if(fxTimer) clearTimeout(fxTimer);
+  fxTimer = setTimeout(()=>{
+    fx = { attackerUid:null, attackDir:null, hitUids:[], directHitOwnerIdx:null };
+    render();
+  }, 600);
+}
+
+function snapshotState(){
+  actionSnapshot = JSON.stringify({players:G.players, spentCost:G.spentCost});
+}
+function restoreSnapshot(){
+  if(actionSnapshot){
+    const snap = JSON.parse(actionSnapshot);
+    G.players = snap.players;
+    G.spentCost = snap.spentCost;
+  }
+  actionSnapshot = null;
+  pendingUI = null;
+  render();
+}
+
+function totalDeckCount(){ return Object.values(deckCounts).reduce((a,b)=>a+b,0); }
+
+// ---------- CPUデッキ アーキタイプ定義 ----------
+// 一般的なTCGのデッキ構築理論（アグロ／ミッドレンジ／コントロール／単色特化）に基づく
+// コストカーブのターゲットを定義し、それに沿ってCPUのデッキを自動構築する。
+const ARCHETYPES = {
+  random: {
+    label: 'ランダム',
+    desc: '全カードからバランスよくランダムに構築します（これまでと同じ挙動）。',
+  },
+  aggro: {
+    label: 'アグロ（速攻型）',
+    desc: 'コスト1〜2の虫を中心に並べ、序盤から積極的に攻めてくるデッキ。息切れは早いが立ち上がりが速い。',
+    costTargets: {1:6, 2:5, 3:4, 4:2, 5:1, 6:0},
+    nonBugCount: 2,
+    preferNonBug: ['hikou_kyousou','kamikiri_ooago'],
+  },
+  midrange: {
+    label: 'ミッドレンジ（中速型）',
+    desc: 'コスト3前後を頂点にした、癖のない標準的なマナカーブのデッキ。',
+    costTargets: {1:2, 2:4, 3:5, 4:4, 5:2, 6:1},
+    nonBugCount: 2,
+  },
+  control: {
+    label: 'コントロール（低速型）',
+    desc: '高コストの虫と除去・強化カードを多めに積み、終盤に強さを発揮するデッキ。序盤は手数が少ない。',
+    costTargets: {1:1, 2:2, 3:3, 4:4, 5:3, 6:2},
+    nonBugCount: 5,
+    preferNonBug: ['jinkaimushi_bakunetsudan','niji_kakehashi','minomushi_kakuremino','harigane_douzure'],
+  },
+  mono_red: {
+    label: '赤単色（速攻寄り）',
+    desc: '赤色の虫だけで統一。属性相性を安定して狙えるが、赤に弱い相手には不利。',
+    costTargets: {1:3, 2:4, 3:4, 4:3, 5:2, 6:1},
+    nonBugCount: 3,
+    color: 'red',
+  },
+  mono_blue: {
+    label: '青単色（バランス型）',
+    desc: '青色の虫だけで統一。属性相性を安定して狙えるが、青に弱い相手には不利。',
+    costTargets: {1:3, 2:4, 3:4, 4:3, 5:2, 6:1},
+    nonBugCount: 3,
+    color: 'blue',
+  },
+  mono_green: {
+    label: '緑単色（持久力型）',
+    desc: '緑色の虫だけで統一。属性相性を安定して狙えるが、緑に弱い相手には不利。',
+    costTargets: {1:3, 2:4, 3:4, 4:3, 5:2, 6:1},
+    nonBugCount: 3,
+    color: 'green',
+  },
+};
+let selectedArchetype = 'random';
+
+// コストターゲットに従って虫カードを選び、残り枠を強化/術カードで埋める汎用ビルダー
+function buildArchetypeDeckCounts(cfg){
+  const colorFilter = cfg.color || null;
+  const counts = {};
+  CARDS.forEach(c=> counts[c.id]=0);
+  let total = 0;
+
+  Object.keys(cfg.costTargets).forEach(costStr=>{
+    const cost = parseInt(costStr,10);
+    const target = cfg.costTargets[cost];
+    if(target<=0) return;
+    let candidates = CARDS.filter(c=>c.type==='bug' && c.cost===cost && (!colorFilter || c.color===colorFilter));
+    if(candidates.length===0) return;
+    candidates = shuffle(candidates);
+    let filled = 0, ci = 0, guard = 0;
+    while(filled<target && guard++<target*20){
+      const c = candidates[ci % candidates.length];
+      ci++;
+      if(counts[c.id] < MAX_COPIES){ counts[c.id]++; filled++; total++; }
+      else if(candidates.every(cc=>counts[cc.id]>=MAX_COPIES)){ break; }
+    }
+  });
+
+  const nonBugTarget = cfg.nonBugCount || 0;
+  let nonBugPool = cfg.preferNonBug ? cfg.preferNonBug.map(id=>CARD_MAP[id]).filter(Boolean)
+    : CARDS.filter(c=>c.type!=='bug');
+  nonBugPool = shuffle(nonBugPool.slice());
+  let nbFilled=0, nbi=0, guard2=0;
+  while(nbFilled<nonBugTarget && total<DECK_SIZE && nonBugPool.length>0 && guard2++<200){
+    const c = nonBugPool[nbi % nonBugPool.length];
+    nbi++;
+    if(counts[c.id] < MAX_COPIES){ counts[c.id]++; nbFilled++; total++; }
+    else if(nonBugPool.every(cc=>counts[cc.id]>=MAX_COPIES)){ break; }
+  }
+
+  // 端数調整：20枚に届いていなければ埋め、超過していれば削る
+  let guard3 = 0;
+  while(total<DECK_SIZE && guard3++<300){
+    let pool = CARDS.filter(c=>c.type==='bug' && (!colorFilter || c.color===colorFilter) && counts[c.id]<MAX_COPIES);
+    if(pool.length===0){ pool = CARDS.filter(c=>counts[c.id]<MAX_COPIES); if(pool.length===0) break; }
+    const c = pool[Math.floor(Math.random()*pool.length)];
+    counts[c.id]++; total++;
+  }
+  while(total>DECK_SIZE){
+    const ids = Object.keys(counts).filter(id=>counts[id]>0);
+    const id = ids[Math.floor(Math.random()*ids.length)];
+    counts[id]--; total--;
+  }
+  return counts;
+}
+
+function buildCpuDeckForArchetype(archetypeKey){
+  if(archetypeKey==='random' || !ARCHETYPES[archetypeKey]) return buildCpuDeck();
+  const counts = buildArchetypeDeckCounts(ARCHETYPES[archetypeKey]);
+  return buildDeckArray(counts);
+}
+
+// ---------- CPUデッキ自動構築（ランダム） ----------
+function buildCpuDeck(){
+  // 全カードから重み付きランダムで20枚（低コスト厚め、各種3枚まで）
+  const pool = CARDS.map(c=>({...c}));
+  let picks = [];
+  // まずバランス: 虫多め
+  const bugs = pool.filter(c=>c.type==='bug');
+  const others = pool.filter(c=>c.type!=='bug');
+  function addN(card, n){ for(let i=0;i<n;i++) picks.push(card.id); }
+  bugs.forEach(c=>{
+    let n = c.cost<=2 ? 3 : (c.cost<=4?2:1);
+    addN(c, Math.min(n,MAX_COPIES));
+  });
+  others.forEach(c=> addN(c, 2));
+  picks = shuffle(picks);
+  while(picks.length > DECK_SIZE) picks.pop();
+  while(picks.length < DECK_SIZE){ const c = bugs[Math.floor(Math.random()*bugs.length)]; picks.push(c.id); }
+  return picks;
+}
+
+// ---------- ゲーム初期化 ----------
+function buildDeckArray(counts){
+  let arr = [];
+  Object.entries(counts).forEach(([id,n])=>{ for(let i=0;i<n;i++) arr.push(id); });
+  return shuffle(arr);
+}
+
+function makePlayer(name, deckIds, isCpu){
+  const deck = shuffle(deckIds).map(id=>({uid:uid(), cardId:id}));
+  const territory = deck.splice(0, TERRITORY_SIZE);
+  const hand = [];
+  for(let i=0;i<START_HAND;i++){ if(deck.length) hand.push(deck.shift()); }
+  return {
+    name, isCpu,
+    deck, hand, territory,
+    field: [], // {uid, cardId, damage, color(override?), attachments:[cardId...], hasAttacked, flipped, protectedTurns, debuffTurns, debuffValue, usedOnce:{}, atkBuffTemp}
+    feed: [],
+    grave: [],
+    freeFeedThisTurn: 0,
+  };
+}
+
+function startGame(){
+  const playerDeck = buildDeckArray(deckCounts);
+  const cpuDeck = buildCpuDeckForArchetype(selectedArchetype);
+  const p1 = makePlayer('あなた', playerDeck, false);
+  const p2 = makePlayer('コンピュータ', cpuDeck, true);
+  G = {
+    turnNum: 1,
+    active: 0, // 0 = player, 1 = cpu
+    players: [p1,p2],
+    phase: 'draw', // draw | set | main | end
+    log: [],
+    firstTurn: true, // 先行1ターン目はドロー無し
+    gameOver: false,
+  };
+  screen = 'game';
+  addLog('システム', `ゲーム開始！相手のデッキタイプ：${ARCHETYPES[selectedArchetype].label}。あなたが先行です（初手はドローなし）。`);
+  render();
+  // 先行なので draw phase をスキップ
+  G.phase = 'set';
+  render();
+}
+
+function addLog(who, text){
+  G.log.push({who, text, turn:G.turnNum});
+  if(G.log.length>200) G.log.shift();
+  showToast(text);
+}
+
+// ---------- 画面中央の一時メッセージ（ログと同じ内容を、発生した瞬間だけ表示） ----------
+let toastMsg = null;
+let toastTimer = null;
+const TOAST_DURATION = 1300;
+function showToast(text){
+  toastMsg = text;
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ toastMsg = null; render(); }, TOAST_DURATION);
+}
+function toastHtml(){
+  if(!toastMsg) return '';
+  return `<div class="centerToast">${toastMsg}</div>`;
+}
+
+function me(){ return G.players[G.active]; }
+function opp(){ return G.players[1-G.active]; }
+
+function cardCost(id){ return CARD_MAP[id].cost; }
+
+function currentCost(p){
+  // メインフェイズ開始時のエサ枚数がコスト。ここでは常時エサ枚数を返す（メインフェイズ中に使用した分は spentCost で管理）
+  return p.feed.length;
+}
+
+// ---------- フェイズ進行 ----------
+function toDrawPhase(){
+  const p = me();
+  if(p.deck.length===0){ endGameLose(G.active, 'デッキが尽きました'); return; }
+  const drawn = p.deck.shift();
+  p.hand.push(drawn);
+  addLog(p.name, p.isCpu ? `ドローした（手札${p.hand.length}枚）。` : `ドロー：${CARD_MAP[drawn.cardId].name}`);
+  G.phase='set';
+  render();
+}
+
+function skipFeed(){
+  G.phase='main';
+  G.spentCost = 0;
+  render();
+  if(me().isCpu) setTimeout(cpuTakeTurn, 500);
+}
+
+function placeFeed(handIndex){
+  const p = me();
+  const card = p.hand.splice(handIndex,1)[0];
+  p.feed.push(card);
+  addLog(p.name, `エサ場に「${CARD_MAP[card.cardId].name}」をセット。`);
+  G.phase='main';
+  G.spentCost = 0;
+  render();
+  if(me().isCpu) setTimeout(cpuTakeTurn, 500);
+}
+
+function availableCost(p){
+  return currentCost(p) - (G.spentCost||0);
+}
+
+// ---------- カードプレイ ----------
+function canPayCost(p, cost){ return availableCost(p) >= cost; }
+
+// ---------- 場に出す虫オブジェクトの生成（擬態の保護カウンター初期化を含む） ----------
+function makeFieldBug(uidv, cardId){
+  const card = CARD_MAP[cardId];
+  const obj = {
+    uid: uidv, cardId: cardId, damage:0, colorOverride:null,
+    attachments: [], hasAttacked:false, flipped:false, dying:false,
+    protectedTurns:0, debuffTurns:0, debuffValue:0, usedOnce:{}, atkBuffTemp:0,
+    justEntered:true,
+  };
+  if(card.keyword==='擬態'){
+    // 「場に出た次の相手のターン」だけ保護されるよう、ターン跨ぎ2回分(自分のターン終了時→相手のターン終了時)でカウントする
+    obj.protectedTurns = 2;
+  }
+  return obj;
+}
+
+function playHandCard(handIndex){
+  const p = me();
+  const inst = p.hand[handIndex];
+  const card = CARD_MAP[inst.cardId];
+  if(!canPayCost(p, card.cost)) { return; }
+
+  if(card.type==='bug'){
+    p.hand.splice(handIndex,1);
+    G.spentCost += card.cost;
+    const fieldObj = makeFieldBug(inst.uid, card.id);
+    p.field.push(fieldObj);
+    addLog(p.name, `「${card.name}」を場に出した。`);
+    render();
+    if(me().isCpu) setTimeout(cpuTakeTurn, 500);
+    return;
+  }
+
+  if(card.type==='enhance'){
+    if(p.field.length===0){ return; }
+    snapshotState();
+    askTargetBug(p, `「${card.name}」を付ける虫を選んでください`, (target)=>{
+      p.hand.splice(handIndex,1);
+      G.spentCost += card.cost;
+      target.attachments.push(card.id);
+      if(card.effect==='hpup'){ /* hp計算時に加算 */ }
+      if(card.effect==='recolor'){
+        askChoice('色を選んでください', ['red','blue','green'].map(c=>({label:COLOR_JP[c], value:c})), (color)=>{
+          target.colorOverride = color;
+          addLog(p.name, `「${card.name}」を「${CARD_MAP[target.cardId].name}」に装着。色を${COLOR_JP[color]}に変更。`);
+          render();
+        });
+        return;
+      }
+      addLog(p.name, `「${card.name}」を「${CARD_MAP[target.cardId].name}」に装着。`);
+      render();
+      if(me().isCpu) setTimeout(cpuTakeTurn, 500);
+    });
+    return;
+  }
+
+  if(card.type==='spell'){
+    resolveSpell(p, card, handIndex);
+  }
+}
+
+function resolveSpell(p, card, handIndex){
+  const o = opp();
+  if(card.effect==='retrieve' || card.effect==='burn600' || card.effect==='burn1000' || card.effect==='buff500single' || card.effect==='returnFeedCard') snapshotState();
+  if(card.effect==='retrieve'){
+    const bugsInGrave = p.grave.filter(g=>CARD_MAP[g.cardId].type==='bug');
+    if(bugsInGrave.length===0){ addLog(p.name,'捨て札に虫がいないため不発。'); return; }
+    askChoice('捨て札から手札に戻す虫を選んでください', bugsInGrave.map(g=>({label:CARD_MAP[g.cardId].name, value:g.uid})), (chosenUid)=>{
+      const idx = p.grave.findIndex(g=>g.uid===chosenUid);
+      const [gcard] = p.grave.splice(idx,1);
+      p.hand.push(gcard);
+      p.hand.splice(handIndex,1) ; // may be off by index shift, handled by re-finding below
+      finishSpellCast(p, card, handIndex, `「${card.name}」→「${CARD_MAP[gcard.cardId].name}」を手札に戻した。`);
+    });
+    return;
+  }
+  if(card.effect==='burn600' || card.effect==='burn1000'){
+    const amount = card.effect==='burn600' ? 600 : 1000;
+    if(o.field.length===0){ addLog(p.name,'相手の場に虫がいないため不発。'); return; }
+    askTargetBug(o, `${amount}ダメージを与える相手の虫を選んでください`, (target)=>{
+      const targetUid = target.uid;
+      // 攻撃演出は、致死ダメージでも必ず表示する（破壊は少し遅れて別演出で起こる）
+      flashAttackFx(null, true, [targetUid]);
+      render();
+      dealDamage(o, target, amount, null, ()=>{
+        finishSpellCast(p, card, handIndex, `「${card.name}」で「${CARD_MAP[target.cardId].name}」に${amount}ダメージ！`);
+      });
+    });
+    return;
+  }
+  if(card.effect==='freefeed'){
+    p.hand.splice(handIndex,1);
+    p.feed.push({uid:uid(), cardId:card.id});
+    addLog(p.name, `「${card.name}」をエサ場に置いた（今ターンのコストにはならない）。`);
+    render();
+    if(me().isCpu) setTimeout(cpuTakeTurn, 500);
+    return;
+  }
+  if(card.effect==='teambuff200'){
+    p.field.forEach(b=> b.atkBuffTemp += 200);
+    finishSpellCast(p, card, handIndex, `「${card.name}」で自分の虫全体の攻撃力+200（ターン終了まで）。`);
+    return;
+  }
+  if(card.effect==='buff500single'){
+    if(p.field.length===0){ addLog(p.name,'自分の場に虫がいないため不発。'); return; }
+    askTargetBug(p, '攻撃力を+500する自分の虫を選んでください', (target)=>{
+      target.atkBuffTemp += 500;
+      finishSpellCast(p, card, handIndex, `「${card.name}」で「${CARD_MAP[target.cardId].name}」の攻撃力+500（ターン終了まで）。`);
+    });
+    return;
+  }
+  if(card.effect==='returnFeedCard'){
+    const candidates = p.feed.filter(f=> CARD_MAP[f.cardId].type!=='bug');
+    if(candidates.length===0){ addLog(p.name,'エサ場に強化/術カードがないため不発。'); return; }
+    askChoice('手札に戻すエサ場のカードを選んでください', candidates.map(f=>({label:CARD_MAP[f.cardId].name, value:f.uid})), (chosenUid)=>{
+      const idx = p.feed.findIndex(f=>f.uid===chosenUid);
+      const [fcard] = p.feed.splice(idx,1);
+      p.hand.push(fcard);
+      finishSpellCast(p, card, handIndex, `「${card.name}」→「${CARD_MAP[fcard.cardId].name}」をエサ場から手札に戻した。`);
+    });
+    return;
+  }
+  if(card.effect==='blockTobidasu'){
+    o.tobidasuBlocked = true;
+    finishSpellCast(p, card, handIndex, `「${card.name}」！相手はターン終了まで＜とびだす＞を使用できない。`);
+    return;
+  }
+}
+function finishSpellCast(p, card, handIndex, msg){
+  // handIndex は retrieve のケースでズレることがあるため id で再検索して除去
+  const idx = p.hand.findIndex(h=>h.cardId===card.id);
+  if(idx>=0) p.hand.splice(idx,1);
+  G.spentCost += card.cost;
+  addLog(p.name, msg);
+  render();
+  if(me().isCpu) setTimeout(cpuTakeTurn, 500);
+}
+
+// ---------- ダメージ・破壊処理 ----------
+function bugMaxHp(owner, bug){
+  let base = CARD_MAP[bug.cardId].hp;
+  bug.attachments.forEach(aid=>{
+    const a=CARD_MAP[aid];
+    if(a.effect==='hpup') base += a.value;
+    if(a.effect==='atkhpup300') base += 300;
+    if(a.effect==='atkhpup500') base += 500;
+  });
+  return base;
+}
+function bugColor(bug){ return bug.colorOverride || CARD_MAP[bug.cardId].color; }
+function bugAtk(bug, techPower){
+  let atk = techPower;
+  bug.attachments.forEach(aid=>{
+    const a=CARD_MAP[aid];
+    if(a.effect==='atkup') atk += a.value;
+    if(a.effect==='atkhpup300') atk += 300;
+    if(a.effect==='atkhpup500') atk += 500;
+  });
+  atk += (bug.atkBuffTemp||0);
+  if(bug.debuffTurns>0) atk = Math.max(0, atk - bug.debuffValue);
+  return atk;
+}
+
+const DESTROY_DELAY = 520; // 体力0→実際に破壊されるまでの間（見た目上の「瀕死」演出の時間）
+
+function dealDamage(ownerOfTarget, targetBug, amount, attackerInfo, onDone){
+  // 蚰蜒の足切り：虫の攻撃を受けた時、ダメージを0にしてこの強化カード自身を破壊する（技の効果自体は無効化しない）
+  if(attackerInfo){
+    const shieldIdx = targetBug.attachments.findIndex(aid=>CARD_MAP[aid].effect==='sacrificialShield');
+    if(shieldIdx>=0){
+      const shieldId = targetBug.attachments[shieldIdx];
+      targetBug.attachments.splice(shieldIdx,1);
+      ownerOfTarget.grave.push({uid:uid(), cardId:shieldId});
+      addLog(ownerOfTarget.name, `「${CARD_MAP[shieldId].name}」が身代わりとなり、ダメージを0にした。`);
+      if(onDone) onDone();
+      return;
+    }
+  }
+  targetBug.damage += amount;
+  const maxHp = bugMaxHp(ownerOfTarget, targetBug);
+  if(targetBug.damage >= maxHp){
+    destroyBug(ownerOfTarget, targetBug, attackerInfo, onDone);
+  } else {
+    if(onDone) onDone();
+  }
+}
+
+// 破壊エントリポイント：体力0になった直後は「瀕死」状態として一瞬盤面に残し、
+// 少し間を置いてから実際に場から取り除く（攻撃演出と破壊演出を分けて見せるため）。
+function destroyBug(ownerOfTarget, targetBug, attackerInfo, onDone){
+  if(targetBug.dying){ if(onDone) onDone(); return; } // 二重発火防止（連鎖効果などで既に処理中の場合）
+  targetBug.dying = true;
+  render();
+  setTimeout(()=>{
+    if(!G.players.includes(ownerOfTarget)) return; // 念のための安全ガード
+    finalizeDestroy(ownerOfTarget, targetBug, attackerInfo);
+    if(onDone) onDone();
+    render();
+  }, DESTROY_DELAY);
+}
+
+// 実際の除去処理（場からの削除・捨て札行き・縄張りドロー・連鎖効果）
+function finalizeDestroy(ownerOfTarget, targetBug, attackerInfo){
+  // 針金虫の道連れ／毒霧噴射 判定
+  const hasRetaliate = targetBug.attachments.some(aid=> CARD_MAP[aid].effect==='retaliate');
+  const hasPoisonMist = CARD_MAP[targetBug.cardId].keyword==='毒霧噴射';
+  // 場から除去
+  ownerOfTarget.field = ownerOfTarget.field.filter(b=>b.uid!==targetBug.uid);
+  ownerOfTarget.grave.push({uid:targetBug.uid, cardId:targetBug.cardId});
+  targetBug.attachments.forEach(aid=> ownerOfTarget.grave.push({uid:uid(), cardId:aid}));
+  addLog(ownerOfTarget.name, `「${CARD_MAP[targetBug.cardId].name}」が破壊された。`);
+  // 縄張りから1枚引く（虫が破壊されただけでは敗北は確定しない。敗北するのは本体への直接攻撃のみ）
+  territoryDraw(ownerOfTarget, false);
+  if(G.gameOver) return; // 念のためのガード（通常はここでは敗北しない）
+  if(hasRetaliate && attackerInfo && attackerInfo.bug){
+    const attackerOwner = attackerInfo.owner;
+    const stillThere = attackerOwner.field.find(b=>b.uid===attackerInfo.bug.uid);
+    if(stillThere){
+      addLog(ownerOfTarget.name, `「針金虫の道連れ」発動！「${CARD_MAP[stillThere.cardId].name}」を破壊！`);
+      destroyBug(attackerOwner, stillThere, null);
+    }
+  }
+  if(hasPoisonMist && attackerInfo && attackerInfo.bug){
+    const attackerOwner = attackerInfo.owner;
+    const idx = attackerOwner.field.findIndex(b=>b.uid===attackerInfo.bug.uid);
+    if(idx>=0){
+      const [returned] = attackerOwner.field.splice(idx,1);
+      returned.attachments.forEach(aid=> attackerOwner.grave.push({uid:uid(), cardId:aid}));
+      attackerOwner.hand.push({uid:returned.uid, cardId:returned.cardId});
+      addLog(ownerOfTarget.name, `＜毒霧噴射＞発動！「${CARD_MAP[returned.cardId].name}」を手札に戻した。`);
+    }
+  }
+}
+
+function territoryDraw(p, isDirectHit){
+  if(p.territory.length===0){
+    if(isDirectHit){
+      // 「縄張りがない状態で本体への直接攻撃を受けた」場合のみ敗北が確定する。
+      endGameLose(G.players.indexOf(p), '縄張りが尽きた状態で直接攻撃を受けた');
+    } else {
+      // 虫が破壊されただけでは敗北にならない（縄張りが無いのでカードは引けない）。
+      addLog(p.name, `縄張りが尽きているため、これ以上カードを引けなかった。`);
+    }
+    return;
+  }
+  const card = p.territory.shift();
+  const cdef = CARD_MAP[card.cardId];
+  const eligible = cdef.type==='bug' && cdef.keyword==='とびだす' && !p.tobidasuBlocked &&
+    !p.field.some(b=>CARD_MAP[b.cardId].keyword==='とびだす');
+
+  if(!eligible){
+    p.hand.push(card);
+    addLog(p.name, p.isCpu
+      ? `縄張りから1枚引いた（残り${p.territory.length}枚）。`
+      : `縄張りから「${cdef.name}」を引いた（残り${p.territory.length}枚）。`);
+    return;
+  }
+  if(p.isCpu){
+    putBugIntoPlayFree(p, card);
+    addLog(p.name, `縄張りから「${cdef.name}」！＜とびだす＞で場に出した。`);
+    return;
+  }
+  askChoice(`縄張りから「${cdef.name}」を引きました。＜とびだす＞`, [
+    {label:'場に出す（とびだす）', value:'summon'},
+    {label:'手札に加える', value:'hand'},
+  ], (choice)=>{
+    if(choice==='summon'){
+      putBugIntoPlayFree(p, card);
+      addLog(p.name, `＜とびだす＞発動！「${cdef.name}」を場に出した。`);
+    } else {
+      p.hand.push(card);
+      addLog(p.name, `「${cdef.name}」を手札に加えた。`);
+    }
+    render();
+  });
+}
+
+function putBugIntoPlayFree(p, cardInst){
+  p.field.push(makeFieldBug(cardInst.uid, cardInst.cardId));
+}
+
+function directAttack(p /* 攻撃を受ける側 */){
+  addLog(p.name, `本体への直接攻撃を受けた！`);
+  territoryDraw(p, true);
+}
+
+// ---------- 攻撃選択フロー(プレイヤー操作) ----------
+let attackingBug = null; // {owner, bug}
+function beginAttack(bug){
+  const p = me();
+  if(bug.hasAttacked) return;
+  if(bug.flipped) return;
+  snapshotState();
+  const card = CARD_MAP[bug.cardId];
+  if(card.techs.length===1){
+    doAttackWithTech(p, bug, card.techs[0]);
+  } else {
+    askChoice(`「${card.name}」の技を選んでください`, card.techs.map((t,i)=>({
+      label: `${t.name}（${t.power}）${t.desc?'　'+t.desc:''}`,
+      value:i,
+      disabled: (t.onceOnly && bug.usedOnce[t.name]) || (t.needSacrifice && p.field.filter(b=>b.uid!==bug.uid).length===0)
+    })), (i)=>{
+      doAttackWithTech(p, bug, card.techs[i]);
+    });
+  }
+}
+
+function targetableEnemyBugs(o){
+  // 擬態: 保護中は対象外。りんぷん: 存在すればそれのみ対象。
+  let list = o.field.filter(b=> !(b.protectedTurns>0) && !b.flipped);
+  const rinpun = list.filter(b=> CARD_MAP[b.cardId].keyword==='りんぷん');
+  if(rinpun.length>0) return rinpun;
+  return list;
+}
+
+function doAttackWithTech(p, bug, tech){
+  const card = CARD_MAP[bug.cardId];
+  if(tech.needSacrifice){
+    const candidates = p.field.filter(b=>b.uid!==bug.uid);
+    if(candidates.length===0){ addLog(p.name,'生贄にできる虫がいません。'); return; }
+    askTargetBug(p, '共食い：破壊する自分の虫を選んでください', (sac)=>{
+      p.field = p.field.filter(b=>b.uid!==sac.uid);
+      p.grave.push({uid:sac.uid, cardId:sac.cardId});
+      addLog(p.name, `共食い：「${CARD_MAP[sac.cardId].name}」を破壊した。`);
+      executeAttack(p, bug, tech);
+    });
+    return;
+  }
+  executeAttack(p, bug, tech);
+}
+
+function executeAttack(p, bug, tech){
+  const o = opp();
+  const isMe = (p === G.players[0]);
+  if(tech.onceOnly){ bug.usedOnce[tech.name]=true; }
+
+  if(tech.flip){
+    const list = o.field.filter(b=>!b.flipped);
+    if(list.length===0){ addLog(p.name,'裏返す対象がいません。'); bug.hasAttacked=true; render(); return; }
+    askTargetBug({field:list}, 'すくい投げ：裏返す相手の虫を選んでください', (target)=>{
+      target.flipped = true;
+      addLog(p.name, `すくい投げ！「${CARD_MAP[target.cardId].name}」をターン終了時まで裏返した。`);
+      bug.hasAttacked = true;
+      flashAttackFx(bug.uid, isMe, [target.uid]);
+      render();
+      afterAttackAI();
+    });
+    return;
+  }
+  if(tech.debuff){
+    const list = o.field.filter(b=>true);
+    if(list.length===0){ addLog(p.name,'対象がいません。'); bug.hasAttacked=true; render(); return; }
+    askTargetBug(o, 'くさいツノ：攻撃力を下げる相手の虫を選んでください', (target)=>{
+      target.debuffTurns = 2; // 相手の次のターン中有効
+      target.debuffValue = tech.debuff;
+      addLog(p.name, `くさいツノ！「${CARD_MAP[target.cardId].name}」の攻撃力を次のターン400下げる。`);
+      bug.hasAttacked = true;
+      flashAttackFx(bug.uid, isMe, [target.uid]);
+      render();
+      afterAttackAI();
+    });
+    return;
+  }
+
+  const targets = targetableEnemyBugs(o);
+  const power = bugAtk(bug, tech.power);
+  if(targets.length===0){
+    // 直接攻撃（実際の判定はdealCombatOutcome側で演出後に行う）
+    dealCombatOutcome(p, o, bug, null, power, tech);
+  } else {
+    askTargetBug({field:targets}, `攻撃対象を選んでください（${tech.name}：${power}）`, (target)=>{
+      dealCombatOutcome(p, o, bug, target, power, tech);
+    });
+  }
+}
+
+function dealCombatOutcome(p, o, bug, target, power, tech){
+  const isMe = (p === G.players[0]);
+  if(target){
+    const atkColor = bugColor(bug);
+    let dmg = power;
+    if(colorAdvantageApplies(atkColor, target)) dmg *= 2;
+    if(isPoisonBlocked(target, tech.name)) dmg = 0;
+    addLog(p.name, `「${CARD_MAP[bug.cardId].name}」の${tech.name}！「${CARD_MAP[target.cardId].name}」に${dmg}ダメージ${dmg>power?'（属性有利2倍）':dmg===0&&power>0?'（毒の体で無効化）':''}。`);
+    const targetUid = target.uid;
+    // 攻撃演出は、致死ダメージでも必ず表示する（破壊は少し遅れて別演出で起こる）
+    flashAttackFx(bug.uid, isMe, [targetUid], null);
+    render();
+    dealDamage(o, target, dmg, {owner:p, bug}, ()=>{
+      finishAttackTurn(p, o, bug, tech);
+    });
+  } else {
+    // 直接攻撃：先に攻撃演出を見せてから、少し間を置いて実際の判定（敗北確定など）を行う
+    flashAttackFx(bug.uid, isMe, [], G.players.indexOf(o));
+    render();
+    setTimeout(()=>{
+      if(!G.players.includes(p) || !G.players.includes(o)) return; // 念のための安全ガード
+      directAttack(o);
+      if(G.gameOver){ render(); return; }
+      finishAttackTurn(p, o, bug, tech);
+    }, DESTROY_DELAY);
+  }
+}
+
+function finishAttackTurn(p, o, bug, tech){
+  if(G.gameOver){ render(); return; } // 敗北が確定した場合、連撃などの以降の処理は行わない
+  bug.hasAttacked = true;
+  const canChain = tech.chain && o.field.length>0;
+  render();
+  if(canChain && p.field.find(b=>b.uid===bug.uid)){
+    bug.hasAttacked = false; // 連撃：再度攻撃可
+    addLog(p.name, `カマ連撃！もう一度攻撃できる。`);
+    render();
+  }
+  checkWin();
+  afterAttackAI();
+}
+
+function afterAttackAI(){
+  if(G.gameOver) return;
+  if(me().isCpu) setTimeout(cpuTakeTurn, 500);
+}
+
+// ---------- 選択UI ----------
+function askTargetBug(ownerLike, title, cb){
+  const opts = ownerLike.field.map(b=>({
+    label: `${CARD_MAP[b.cardId].name}（${bugMaxHp({},b)-b.damage}/${bugMaxHp({},b)}）`,
+    value: b.uid
+  }));
+  askChoice(title, opts, (chosenUid)=>{
+    const b = ownerLike.field.find(x=>x.uid===chosenUid);
+    cb(b);
+  });
+}
+function askChoice(title, options, cb){
+  pendingUI = { title, options, cb };
+  render();
+}
+function pickOption(opt){
+  const cb = pendingUI.cb;
+  pendingUI = null;
+  cb(opt.value!==undefined?opt.value:opt);
+  render();
+}
+
+// ---------- ターン終了処理 ----------
+function endTurn(){
+  const p = me();
+  const o = opp();
+  // 蟲祓いの煙幕：自分が仕掛けた「相手のとびだす封じ」は自分のターン終了時に切れる
+  o.tobidasuBlocked = false;
+  // ターン終了時のリセット（攻撃済みフラグ・自分限定の一時バフは自分の虫のみ）
+  p.field.forEach(b=>{
+    b.hasAttacked = false;
+    b.atkBuffTemp = 0;
+    b.justEntered = false;
+  });
+  // ダメージ・裏返し状態は両プレイヤーの虫全てをリセット。
+  // 擬態の保護／くさいツノの弱体化は「次の相手ターン」まで効くよう、両者分をここで1減らす。
+  G.players.forEach(pl=>{
+    pl.field.forEach(b=>{
+      b.damage = 0;
+      b.flipped = false;
+      if(b.protectedTurns>0) b.protectedTurns -= 1;
+      if(b.debuffTurns>0) b.debuffTurns -= 1;
+    });
+  });
+  addLog(p.name, 'ターンエンド。');
+  G.active = 1-G.active;
+  G.turnNum += 1;
+  G.spentCost = 0;
+  G.phase = 'draw';
+  render();
+  setTimeout(()=>{
+    if(G.gameOver) return;
+    toDrawPhase();
+    if(me().isCpu) setTimeout(cpuTakeTurn, 600);
+  }, 400);
+}
+
+function checkWin(){
+  G.players.forEach((pl,i)=>{
+    if(pl.territory.length===0 && pl.field.length===0){
+      // 縄張りが尽きていて、さらに直接攻撃を受ける状況になったときのみ負けとするため、ここでは何もしない
+    }
+  });
+}
+
+function endGameLose(loserIdx, reason){
+  if(G.gameOver) return;
+  G.gameOver = true;
+  const loser = G.players[loserIdx];
+  const winner = G.players[1-loserIdx];
+  resultText = (winner.isCpu) ? `敗北…（${reason}）` : `勝利！（相手：${reason}）`;
+  addLog('システム', `${loser.name}の敗北：${reason}`);
+  render();
+}
+
+// ---------- CPU AI ----------
+function cpuTakeTurn(){
+  if(G.gameOver || !me().isCpu) return;
+  const p = me();
+
+  if(G.phase==='set'){
+    // 手札が多い/使わなそうなカードをエサに
+    if(p.hand.length>0){
+      let idx = 0;
+      // 一番コストが低い(使い道が少なそうな)カードをエサにする、手札4枚以下なら温存
+      if(p.hand.length>=3){
+        let worst = 0, worstScore = 999;
+        p.hand.forEach((h,i)=>{ const c=CARD_MAP[h.cardId]; const score = c.cost; if(score<worstScore){worstScore=score; worst=i;} });
+        idx = worst;
+        placeFeed(idx);
+      } else {
+        skipFeed();
+      }
+    } else {
+      skipFeed();
+    }
+    return;
+  }
+
+  if(G.phase==='main'){
+    cpuMainStep(0);
+    return;
+  }
+}
+
+// CPUのメインフェイズを「1アクションずつ」間隔を空けて進める。
+// 毎回1つだけ行動し、演出(flashAttackFx)がしっかり見えるよう次の行動まで少し待つ。
+const CPU_STEP_DELAY = 850;
+function cpuMainStep(stepCount){
+  if(G.gameOver || !me().isCpu || G.phase!=='main') return;
+  if(stepCount > 40){ // 安全弁：万一ループした場合に備える
+    if(!G.gameOver) endTurn();
+    return;
+  }
+  const p = me(); const o = opp();
+
+  // 1) 出せる虫があれば、最もコストの高いものを1体だけ出す
+  const affordable = p.hand
+    .map((h,i)=>({h,i,c:CARD_MAP[h.cardId]}))
+    .filter(x=> x.c.type==='bug' && canPayCost(p, x.c.cost))
+    .sort((a,b)=> b.c.cost-a.c.cost);
+  if(affordable.length>0){
+    playHandCardCpu(affordable[0].i);
+    setTimeout(()=>cpuMainStep(stepCount+1), CPU_STEP_DELAY);
+    return;
+  }
+
+  // 2) 強化カードがあれば自分の虫に付ける（色変更・口寄せの時蛹は複雑なのでCPUは使わない）
+  const enhanceIdx = p.hand.findIndex(h=>{
+    const c = CARD_MAP[h.cardId];
+    return c.type==='enhance' && c.effect!=='recolor' && c.effect!=='chrysalisSummon' && canPayCost(p, c.cost) && p.field.length>0;
+  });
+  if(enhanceIdx>=0){
+    playEnhanceCpu(enhanceIdx);
+    setTimeout(()=>cpuMainStep(stepCount+1), CPU_STEP_DELAY);
+    return;
+  }
+
+  // 3) 飛蝗の凶相（自分の虫全体+200、ターン終了まで）：攻撃前に、未攻撃の虫がいれば使う
+  const buffIdx = p.hand.findIndex(h=>CARD_MAP[h.cardId].effect==='teambuff200');
+  if(buffIdx>=0 && canPayCost(p, CARD_MAP[p.hand[buffIdx].cardId].cost) && p.field.some(b=>!b.hasAttacked && !b.flipped)){
+    resolveSpellCpu(buffIdx);
+    setTimeout(()=>cpuMainStep(stepCount+1), CPU_STEP_DELAY);
+    return;
+  }
+
+  // 4) 蟲の息吹（コスト0でエサ場を増やせる）：持っていれば出しておく
+  const freeFeedIdx = p.hand.findIndex(h=>CARD_MAP[h.cardId].effect==='freefeed');
+  if(freeFeedIdx>=0){
+    resolveSpellCpu(freeFeedIdx);
+    setTimeout(()=>cpuMainStep(stepCount+1), CPU_STEP_DELAY);
+    return;
+  }
+
+  // 5) 有利なトレードがあれば除去術（爆熱弾/電気虫の稲妻）を1回使う
+  const burnIdx = p.hand.findIndex(h=>{
+    const c = CARD_MAP[h.cardId];
+    return c.effect==='burn600' || c.effect==='burn1000';
+  });
+  if(burnIdx>=0 && canPayCost(p, CARD_MAP[p.hand[burnIdx].cardId].cost) && o.field.length>0){
+    const amount = CARD_MAP[p.hand[burnIdx].cardId].effect==='burn600' ? 600 : 1000;
+    const killable = o.field.find(b=> (bugMaxHp({},b)-b.damage) <= amount);
+    if(killable){
+      resolveSpellCpu(burnIdx);
+      setTimeout(()=>cpuMainStep(stepCount+1), CPU_STEP_DELAY);
+      return;
+    }
+  }
+
+  // 6) 虹の架け橋：出せる虫が手札になければ捨て札から回収を試みる
+  const retrieveIdx = p.hand.findIndex(h=>CARD_MAP[h.cardId].effect==='retrieve');
+  if(retrieveIdx>=0 && canPayCost(p, CARD_MAP[p.hand[retrieveIdx].cardId].cost)){
+    const bugsInGrave = p.grave.filter(g=>CARD_MAP[g.cardId].type==='bug');
+    const noPlayableBugInHand = !p.hand.some((h,i)=> i!==retrieveIdx && CARD_MAP[h.cardId].type==='bug');
+    if(bugsInGrave.length>0 && noPlayableBugInHand){
+      resolveSpellCpu(retrieveIdx);
+      setTimeout(()=>cpuMainStep(stepCount+1), CPU_STEP_DELAY);
+      return;
+    }
+  }
+
+  // 7) 攻撃可能な虫を1体だけ攻撃させる
+  const attacker = p.field.find(b=>!b.hasAttacked && !b.flipped);
+  if(attacker){
+    cpuAttackWith(attacker);
+    setTimeout(()=>cpuMainStep(stepCount+1), CPU_STEP_DELAY);
+    return;
+  }
+
+  // 8) もう何もすることがなければターンエンド
+  setTimeout(()=>{
+    if(!G.gameOver) endTurn();
+  }, 500);
+}
+
+function playEnhanceCpu(handIndex){
+  const p = me();
+  const inst = p.hand[handIndex];
+  const card = CARD_MAP[inst.cardId];
+  let target;
+  if(card.effect==='hpup' || card.effect==='retaliate' || card.effect==='noWeakness' || card.effect==='sacrificialShield'){
+    // 打たれ弱い（残りHPが低い）虫を優先的に守る
+    target = p.field.slice().sort((a,b)=>(bugMaxHp({},a)-a.damage)-(bugMaxHp({},b)-b.damage))[0];
+  } else {
+    // 攻撃力アップ等は、最もコストが高い＝主力の虫に付ける
+    target = p.field.slice().sort((a,b)=>CARD_MAP[b.cardId].cost-CARD_MAP[a.cardId].cost)[0];
+  }
+  if(!target) return;
+  p.hand.splice(handIndex,1);
+  G.spentCost += card.cost;
+  target.attachments.push(card.id);
+  addLog(p.name, `「${card.name}」を「${CARD_MAP[target.cardId].name}」に装着した。`);
+  render();
+}
+
+function playHandCardCpu(handIndex){
+  const p = me();
+  const inst = p.hand[handIndex];
+  const card = CARD_MAP[inst.cardId];
+  p.hand.splice(handIndex,1);
+  G.spentCost += card.cost;
+  const fieldObj = makeFieldBug(inst.uid, card.id);
+  p.field.push(fieldObj);
+  addLog(p.name, `「${card.name}」を場に出した。`);
+  render();
+}
+
+function resolveSpellCpu(handIndex){
+  const p = me(); const o = opp();
+  const inst = p.hand[handIndex];
+  const card = CARD_MAP[inst.cardId];
+  if(card.effect==='burn600' || card.effect==='burn1000'){
+    const amount = card.effect==='burn600' ? 600 : 1000;
+    let best=null, bestHp=99999;
+    o.field.forEach(b=>{ const hp=bugMaxHp({},b)-b.damage; if(hp<bestHp){bestHp=hp; best=b;} });
+    if(best){
+      const targetUid = best.uid;
+      const targetName = CARD_MAP[best.cardId].name;
+      // 攻撃演出は、致死ダメージでも必ず表示する（破壊は少し遅れて別演出で起こる）
+      flashAttackFx(null, false, [targetUid]);
+      render();
+      dealDamage(o, best, amount, null, ()=>{
+        p.hand.splice(handIndex,1);
+        G.spentCost += card.cost;
+        addLog(p.name, `「${card.name}」で「${targetName}」に${amount}ダメージ！`);
+        render();
+      });
+    }
+    return;
+  }
+  if(card.effect==='freefeed'){
+    p.hand.splice(handIndex,1);
+    p.feed.push({uid:uid(), cardId:card.id});
+    addLog(p.name, `「${card.name}」をエサ場に置いた。`);
+    render();
+    return;
+  }
+  if(card.effect==='teambuff200'){
+    p.hand.splice(handIndex,1);
+    G.spentCost += card.cost;
+    p.field.forEach(b=> b.atkBuffTemp += 200);
+    addLog(p.name, `「${card.name}」で自分の虫全体の攻撃力+200（ターン終了まで）。`);
+    render();
+    return;
+  }
+  if(card.effect==='retrieve'){
+    const bugsInGrave = p.grave.filter(g=>CARD_MAP[g.cardId].type==='bug');
+    if(bugsInGrave.length===0) return;
+    // 一番コストが高い（強力な）虫を優先的に回収する
+    const best = bugsInGrave.reduce((a,b)=> CARD_MAP[b.cardId].cost>CARD_MAP[a.cardId].cost ? b : a);
+    const gidx = p.grave.findIndex(g=>g.uid===best.uid);
+    const [gcard] = p.grave.splice(gidx,1);
+    p.hand.push(gcard);
+    const hidx = p.hand.indexOf(inst);
+    if(hidx>=0) p.hand.splice(hidx,1);
+    G.spentCost += card.cost;
+    addLog(p.name, `「${card.name}」→「${CARD_MAP[gcard.cardId].name}」を捨て札から回収した。`);
+    render();
+    return;
+  }
+}
+
+function cpuAttackWith(bug){
+  const p = me(); const o = opp();
+  const card = CARD_MAP[bug.cardId];
+  const targets = targetableEnemyBugs(o);
+
+  // 通常技（needSacrifice/flip/debuffを除く）の中で最大威力のもの
+  const normalTechs = card.techs.filter(t=>
+    !t.flip && !t.debuff && !t.needSacrifice && !(t.onceOnly && bug.usedOnce[t.name]));
+  const bestNormal = normalTechs.length ? normalTechs.reduce((a,b)=> b.power>a.power?b:a) : null;
+
+  function wouldKillSomething(power){
+    return targets.some(t=>{
+      const dmg = power * (beats(bugColor(bug), bugColor(t))?2:1);
+      return dmg >= (bugMaxHp({},t)-t.damage);
+    });
+  }
+
+  // 1) 共食い：生贄を払ってでもキルできる相手がいて、通常技ではキルできない場合のみ使用
+  const sacTech = card.techs.find(t=>t.needSacrifice && !(t.onceOnly && bug.usedOnce[t.name]));
+  if(sacTech && p.field.length>=2 && targets.length>0){
+    const sacPower = bugAtk(bug, sacTech.power);
+    const normalPower = bestNormal ? bugAtk(bug, bestNormal.power) : 0;
+    if(wouldKillSomething(sacPower) && !wouldKillSomething(normalPower)){
+      const sacCandidate = p.field.filter(b=>b.uid!==bug.uid)
+        .sort((a,b)=>CARD_MAP[a.cardId].cost-CARD_MAP[b.cardId].cost)[0];
+      p.field = p.field.filter(b=>b.uid!==sacCandidate.uid);
+      p.grave.push({uid:sacCandidate.uid, cardId:sacCandidate.cardId});
+      addLog(p.name, `共食い：「${CARD_MAP[sacCandidate.cardId].name}」を破壊した。`);
+      resolveCpuNormalAttack(bug, sacTech, targets);
+      return;
+    }
+  }
+
+  // 2) すくい投げ／くさいツノ：通常技でキルできない強敵（攻撃力500以上）がいれば無力化する
+  const flipTech = card.techs.find(t=>t.flip);
+  const debuffTech = card.techs.find(t=>t.debuff);
+  if((flipTech || debuffTech) && targets.length>0){
+    const normalPower = bestNormal ? bugAtk(bug, bestNormal.power) : 0;
+    const threat = targets
+      .filter(t=> !flipTech || !t.flipped)
+      .map(t=>({ t, atk: bugAtk(t, CARD_MAP[t.cardId].techs[0].power) }))
+      .filter(x=> x.atk>=500)
+      .sort((a,b)=> b.atk-a.atk)[0];
+    if(threat && !wouldKillSomething(normalPower)){
+      const tech = flipTech || debuffTech;
+      if(tech.onceOnly) bug.usedOnce[tech.name]=true;
+      if(tech.flip){
+        threat.t.flipped = true;
+        addLog(p.name, `「${card.name}」のすくい投げ！「${CARD_MAP[threat.t.cardId].name}」をターン終了時まで裏返した。`);
+      } else {
+        threat.t.debuffTurns = 2;
+        threat.t.debuffValue = tech.debuff;
+        addLog(p.name, `「${card.name}」のくさいツノ！「${CARD_MAP[threat.t.cardId].name}」の攻撃力を次のターン400下げる。`);
+      }
+      bug.hasAttacked = true;
+      flashAttackFx(bug.uid, false, [threat.t.uid]);
+      render();
+      return;
+    }
+  }
+
+  if(!bestNormal){ bug.hasAttacked = true; render(); return; }
+  resolveCpuNormalAttack(bug, bestNormal, targets);
+}
+
+function resolveCpuNormalAttack(bug, tech, targets){
+  const p = me(); const o = opp();
+  const card = CARD_MAP[bug.cardId];
+  const power = bugAtk(bug, tech.power);
+  if(tech.onceOnly) bug.usedOnce[tech.name]=true;
+
+  if(targets.length===0){
+    // 直接攻撃：先に攻撃演出を見せてから、少し間を置いて実際の判定（敗北確定など）を行う
+    flashAttackFx(bug.uid, false, [], G.players.indexOf(o));
+    render();
+    setTimeout(()=>{
+      if(!G.players.includes(p) || !G.players.includes(o)) return; // 念のための安全ガード
+      directAttack(o);
+      addLog(p.name, `「${card.name}」が本体に直接攻撃！`);
+      if(G.gameOver){ render(); return; }
+      finishCpuAttack(p, o, bug, tech);
+    }, DESTROY_DELAY);
+    return;
+  }
+
+  // 一番倒せそうな相手 or 有利属性を狙う
+  let best=null, bestScore=-1;
+  targets.forEach(t=>{
+    const atkColor = bugColor(bug);
+    let dmg = power * (colorAdvantageApplies(atkColor,t)?2:1);
+    if(isPoisonBlocked(t, tech.name)) dmg = 0;
+    const hp = bugMaxHp({},t)-t.damage;
+    let score = dmg>=hp ? 1000+dmg : dmg;
+    if(score>bestScore){ bestScore=score; best=t; }
+  });
+  const atkColor = bugColor(bug);
+  let dmg = power * (colorAdvantageApplies(atkColor,best)?2:1);
+  if(isPoisonBlocked(best, tech.name)) dmg = 0;
+  addLog(p.name, `「${card.name}」の${tech.name}！「${CARD_MAP[best.cardId].name}」に${dmg}ダメージ。`);
+  const targetUid = best.uid;
+  // 攻撃演出は、致死ダメージでも必ず表示する（破壊は少し遅れて別演出で起こる）
+  flashAttackFx(bug.uid, false, [targetUid]);
+  render();
+  dealDamage(o, best, dmg, {owner:p, bug}, ()=>{
+    finishCpuAttack(p, o, bug, tech);
+  });
+}
+
+function finishCpuAttack(p, o, bug, tech){
+  if(G.gameOver){ render(); return; }
+  bug.hasAttacked = true;
+  if(tech.chain && o.field.length>0 && p.field.find(x=>x.uid===bug.uid)){
+    bug.hasAttacked = false;
+  }
+  render();
+  checkWin();
+}
+
+// ---------- 描画 ----------
+function render(){
+  const app = document.getElementById('app');
+  if(screen==='deck'){ app.innerHTML = renderDeckBuilder() + toastHtml(); attachDeckHandlers(); return; }
+  if(screen==='opponent'){ app.innerHTML = renderOpponentSelect() + toastHtml(); attachOpponentHandlers(); return; }
+  if(screen==='game'){ app.innerHTML = renderGame() + toastHtml(); attachGameHandlers(); return; }
+}
+
+function renderOpponentSelect(){
+  return `
+  <div class="topbar">
+    <div>
+      <h1>相手のデッキタイプを選ぶ</h1>
+      <div class="sub">よくあるTCGのデッキ構築理論（アグロ／ミッドレンジ／コントロール／単色特化）に沿って、CPUのデッキを構築します。</div>
+    </div>
+  </div>
+  <div class="cardGrid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
+    ${Object.keys(ARCHETYPES).map(key=>{
+      const a = ARCHETYPES[key];
+      const active = selectedArchetype===key;
+      return `
+      <div class="cardTile" data-archetype="${key}" style="cursor:pointer;${active?'border-color:var(--gold);box-shadow:0 0 0 2px var(--gold);':''}">
+        <div class="name">${a.label}${active?' ✓':''}</div>
+        <div class="tech" style="margin-top:6px;">${a.desc}</div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="controls" style="margin-top:16px;">
+    <button id="backToDeckFromOpponent">← デッキ編成に戻る</button>
+    <button class="primary" id="startWithArchetypeBtn">この相手と対戦開始</button>
+  </div>
+  `;
+}
+
+function attachOpponentHandlers(){
+  document.querySelectorAll('[data-archetype]').forEach(el=>{
+    el.onclick = ()=>{ selectedArchetype = el.getAttribute('data-archetype'); render(); };
+  });
+  const backBtn = document.getElementById('backToDeckFromOpponent');
+  if(backBtn) backBtn.onclick = ()=>{ screen='deck'; render(); };
+  const startBtn = document.getElementById('startWithArchetypeBtn');
+  if(startBtn) startBtn.onclick = ()=> startGame();
+}
+
+function renderDeckBuilder(){
+  const total = totalDeckCount();
+  const list = CARDS.filter(c=> filterType==='all' ? true : c.type===filterType || (filterType==='color' && c.type==='bug'));
+  let filtered = filterType==='all' ? CARDS :
+    (filterType==='bug' ? CARDS.filter(c=>c.type==='bug') :
+     filterType==='enhance' ? CARDS.filter(c=>c.type==='enhance') :
+     filterType==='spell' ? CARDS.filter(c=>c.type==='spell') : CARDS);
+  if(filterPack!=='all') filtered = filtered.filter(c=>c.pack===filterPack);
+  if(filterColor!=='all') filtered = filtered.filter(c=>c.color===filterColor);
+  if(filterSelection==='selected') filtered = filtered.filter(c=>(deckCounts[c.id]||0)>0);
+  if(filterSelection==='unselected') filtered = filtered.filter(c=>(deckCounts[c.id]||0)===0);
+  return `
+  <div class="topbar">
+    <div>
+      <h1>蟲神器 ソロバトル</h1>
+      <div class="sub">スターター＋ブースター第1弾・第2弾 収録プロトタイプ ／ あなたのデッキを組んでください</div>
+    </div>
+  </div>
+  <p class="hint">
+    ・自分のデッキは<b>${DECK_SIZE}枚ちょうど</b>で編成します（同名カードは最大${MAX_COPIES}枚まで、公式ルールを参考にした本プロトタイプ独自の上限です）。<br>
+    ・「🎲 ランダム構築」で自動的に20枚組んでくれます。そこから増減して自分好みに調整することもできます。<br>
+    ・対戦開始前に、コンピュータのデッキタイプ（アグロ／ミッドレンジ／コントロール／単色特化／ランダム）を選べます。<br>
+    ・体力は毎ターン終了時に全回復します。1体につき1ターン1回攻撃（連撃技を除く）。
+  </p>
+  <div class="deckStatus">
+    <div>デッキ枚数：<span class="count">${total} / ${DECK_SIZE}</span></div>
+    <button class="primary" id="startBtn" ${total!==DECK_SIZE?'disabled':''}>次へ（相手を選ぶ）</button>
+    <button id="randomDeckBtn">🎲 ランダム構築</button>
+    <button id="resetDeck">リセット</button>
+    <span style="flex:1"></span>
+    <input type="text" id="deckNameInput" placeholder="デッキ名（任意）" value="${deckName.replace(/"/g,'&quot;')}"
+      style="background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:7px 10px;font-size:13px;width:160px;">
+    <button id="saveDeckBtn">💾 デッキを保存</button>
+    <button id="loadDeckBtn">📂 デッキを読み込む</button>
+    <input type="file" id="loadDeckFile" accept="application/json,.json" style="display:none;">
+    <span class="hint" id="deckIoMsg"></span>
+  </div>
+  <div class="filterRow">
+    <button data-f="all" class="${filterType==='all'?'active':''}">すべて</button>
+    <button data-f="bug" class="${filterType==='bug'?'active':''}">虫カード</button>
+    <button data-f="enhance" class="${filterType==='enhance'?'active':''}">強化カード</button>
+    <button data-f="spell" class="${filterType==='spell'?'active':''}">術カード</button>
+  </div>
+  <div class="filterRow">
+    <button data-pack="all" class="${filterPack==='all'?'active':''}">全ての弾</button>
+    <button data-pack="スターター" class="${filterPack==='スターター'?'active':''}">スターター</button>
+    <button data-pack="第1弾" class="${filterPack==='第1弾'?'active':''}">ブースター第1弾</button>
+    <button data-pack="第2弾" class="${filterPack==='第2弾'?'active':''}">ブースター第2弾</button>
+  </div>
+  <div class="filterRow">
+    <button data-color="all" class="${filterColor==='all'?'active':''}">すべての色</button>
+    <button data-color="red" class="${filterColor==='red'?'active':''}" style="${filterColor==='red'?'background:linear-gradient(180deg,var(--red),#e83a4d);color:#fff;':''}">赤</button>
+    <button data-color="blue" class="${filterColor==='blue'?'active':''}" style="${filterColor==='blue'?'background:linear-gradient(180deg,var(--blue),#1a8fc4);color:#fff;':''}">青</button>
+    <button data-color="green" class="${filterColor==='green'?'active':''}" style="${filterColor==='green'?'background:linear-gradient(180deg,var(--green),#3ab84a);color:#fff;':''}">緑</button>
+  </div>
+  <div class="filterRow">
+    <button data-sel="all" class="${filterSelection==='all'?'active':''}">すべて表示</button>
+    <button data-sel="selected" class="${filterSelection==='selected'?'active':''}">選択中のみ</button>
+    <button data-sel="unselected" class="${filterSelection==='unselected'?'active':''}">未選択のみ</button>
+  </div>
+  <div class="cardGrid">
+    ${filtered.map(c=>cardTileHtml(c)).join('')}
+  </div>
+  ${cardInfoModal ? cardInfoModalHtml() : ''}
+  `;
+}
+
+function cardTileHtml(c){
+  const n = deckCounts[c.id]||0;
+  const colorDot = c.type==='bug' ? `<span class="swatch" style="background:${c.color==='red'?'#ff5d6c':c.color==='blue'?'#29c5f6':'#6be675'}"></span>` : '';
+  let statLine = '';
+  if(c.type==='bug'){
+    statLine = `<div class="meta">${colorDot}<span class="colorTag-${c.color}">${COLOR_JP[c.color]}</span>／コスト${c.cost}／体力${c.hp}／${c.pack}</div>`;
+  } else {
+    statLine = `<div class="meta">${c.type==='enhance'?'強化':'術'}／コスト${c.cost}／${c.pack}</div>`;
+  }
+  let techHtml = '';
+  if(c.type==='bug'){
+    techHtml = c.techs.map(t=>`<div class="tech">${t.name}：${t.power}${t.desc?'　'+t.desc:''}</div>`).join('');
+    if(c.keyword) techHtml += `<div class="tech">＜${c.keyword}＞：${c.keywordDesc}</div>`;
+  } else {
+    techHtml = `<div class="tech">${c.desc}</div>`;
+  }
+  return `
+  <div class="cardTile">
+    <div class="name"><span class="cardNameLink" data-showcard="${c.id}">${c.name}</span><span style="float:right;color:var(--sub);font-size:10px">${c.rarity}</span></div>
+    ${statLine}
+    ${techHtml}
+    <div class="qtyRow">
+      <button data-dec="${c.id}" ${n<=0?'disabled':''}>−</button>
+      <div class="qty">${n}</div>
+      <button data-inc="${c.id}" ${(n>=MAX_COPIES || totalDeckCount()>=DECK_SIZE)?'disabled':''}>＋</button>
+    </div>
+  </div>`;
+}
+
+// ---------- プレイヤー用ランダムデッキ構築 ----------
+function randomizePlayerDeck(){
+  const bugs = CARDS.filter(c=>c.type==='bug');
+  const others = CARDS.filter(c=>c.type!=='bug');
+  const counts = {};
+  CARDS.forEach(c=> counts[c.id]=0);
+
+  // 重み付け候補プール（低コストの虫を厚めに、強化・術も適度に混ぜる）
+  let pool = [];
+  bugs.forEach(c=>{
+    const weight = c.cost<=2 ? 5 : (c.cost<=4?3:2);
+    for(let i=0;i<weight;i++) pool.push(c.id);
+  });
+  others.forEach(c=>{
+    for(let i=0;i<2;i++) pool.push(c.id);
+  });
+  pool = shuffle(pool);
+
+  let total = 0;
+  for(const id of pool){
+    if(total>=DECK_SIZE) break;
+    if(counts[id] < MAX_COPIES){
+      counts[id]++; total++;
+    }
+  }
+  // 万一プールの偏りで20枚に届かなければ、残りをランダムな虫で埋める
+  let guard = 0;
+  while(total < DECK_SIZE && guard++ < 200){
+    const c = bugs[Math.floor(Math.random()*bugs.length)];
+    if(counts[c.id] < MAX_COPIES){ counts[c.id]++; total++; }
+  }
+  deckCounts = counts;
+}
+
+function attachDeckHandlers(){
+  document.querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>{
+    const id=b.getAttribute('data-inc');
+    if(deckCounts[id]<MAX_COPIES && totalDeckCount()<DECK_SIZE){ deckCounts[id]++; render(); }
+  });
+  document.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>{
+    const id=b.getAttribute('data-dec');
+    if(deckCounts[id]>0){ deckCounts[id]--; render(); }
+  });
+  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ filterType=b.getAttribute('data-f'); render(); });
+  document.querySelectorAll('[data-pack]').forEach(b=>b.onclick=()=>{ filterPack=b.getAttribute('data-pack'); render(); });
+  document.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{ filterColor=b.getAttribute('data-color'); render(); });
+  document.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{ filterSelection=b.getAttribute('data-sel'); render(); });
+  attachCardInfoHandlers();
+  const resetBtn = document.getElementById('resetDeck');
+  if(resetBtn) resetBtn.onclick = ()=>{ Object.keys(deckCounts).forEach(k=>deckCounts[k]=0); deckName=''; render(); };
+  const randomBtn = document.getElementById('randomDeckBtn');
+  if(randomBtn) randomBtn.onclick = ()=>{
+    randomizePlayerDeck();
+    render();
+    const m = document.getElementById('deckIoMsg');
+    if(m) m.textContent = `ランダムに${totalDeckCount()}枚のデッキを生成しました。`;
+  };
+  const startBtn = document.getElementById('startBtn');
+  if(startBtn) startBtn.onclick = ()=>{ screen='opponent'; render(); };
+
+  const msgEl = document.getElementById('deckIoMsg');
+  const nameInput = document.getElementById('deckNameInput');
+  if(nameInput) nameInput.oninput = ()=>{ deckName = nameInput.value; };
+  const saveBtn = document.getElementById('saveDeckBtn');
+  if(saveBtn) saveBtn.onclick = ()=> saveDeckToFile(msgEl);
+  const loadBtn = document.getElementById('loadDeckBtn');
+  const fileInput = document.getElementById('loadDeckFile');
+  if(loadBtn && fileInput){
+    loadBtn.onclick = ()=> fileInput.click();
+    fileInput.onchange = (e)=>{
+      const file = e.target.files && e.target.files[0];
+      if(file) loadDeckFromFile(file, msgEl);
+      fileInput.value = '';
+    };
+  }
+}
+
+function saveDeckToFile(msgEl){
+  const name = (deckName||'').trim();
+  const payload = { type:'mushijingi-solo-deck', version:1, name: name || null, savedAt:new Date().toISOString(), counts: deckCounts };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
+  // ファイル名に使えない文字を除去し、名前があればファイル名にも反映する
+  const safeName = name.replace(/[\\/:*?"<>|]/g,'').trim();
+  a.href = url;
+  a.download = safeName ? `mushijingi-deck-${safeName}-${stamp}.json` : `mushijingi-deck-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=> URL.revokeObjectURL(url), 2000);
+  if(msgEl){ msgEl.textContent = name ? `「${name}」として保存しました。` : 'デッキファイルをダウンロードしました。'; }
+}
+
+function loadDeckFromFile(file, msgEl){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      const counts = data && data.counts ? data.counts : data; // 旧形式(countsのみ)も許容
+      if(!counts || typeof counts !== 'object') throw new Error('形式が不正です');
+      const next = {};
+      CARDS.forEach(c=> next[c.id] = 0);
+      let total = 0;
+      Object.entries(counts).forEach(([id,n])=>{
+        if(CARD_MAP[id] && Number.isInteger(n) && n>=0){
+          const capped = Math.min(n, MAX_COPIES);
+          next[id] = capped;
+          total += capped;
+        }
+      });
+      if(total > DECK_SIZE){
+        // 超過分は先頭から削って上限に収める
+        let over = total - DECK_SIZE;
+        for(const id of Object.keys(next)){
+          while(over>0 && next[id]>0){ next[id]--; over--; }
+          if(over<=0) break;
+        }
+      }
+      deckCounts = next;
+      deckName = (data && typeof data.name === 'string') ? data.name : '';
+      if(msgEl) msgEl.textContent = data && data.name
+        ? `「${data.name}」を読み込みました（${totalDeckCount()}枚）。`
+        : `デッキを読み込みました（${totalDeckCount()}枚）。`;
+      render();
+    } catch(err){
+      if(msgEl) msgEl.textContent = '読み込みに失敗しました。ファイル形式を確認してください。';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function renderGame(){
+  if(G.gameOver){
+    return `
+    <div class="banner">
+      <h1>${resultText}</h1>
+      <button class="primary" id="backToDeck">デッキ編成に戻る</button>
+    </div>
+    <h3 style="margin-top:6px;font-size:14px;color:var(--gold)">対戦ログ（全${G.log.length}件）</h3>
+    <div class="logPanel" id="logPanel" style="max-height:none;">
+      ${G.log.slice().reverse().map(l=>`<div><span class="t">[T${l.turn} ${l.who}]</span> ${l.text}</div>`).join('')}
+    </div>`;
+  }
+  const p = G.players[0], c = G.players[1];
+  const myTurn = G.active===0;
+  const cost = currentCost(me());
+  const spent = G.spentCost||0;
+
+  return `
+  <div class="topbar">
+    <div>
+      <h1>蟲神器 ソロバトル</h1>
+      <div class="sub">ターン${G.turnNum}　${myTurn?'あなたの番':'相手の番'}　フェーズ：${phaseLabel(G.phase)}</div>
+    </div>
+    <div class="hint">コスト：${myTurn?`${cost-spent} / ${cost}`:'-'}</div>
+  </div>
+
+  <div class="board">
+    ${playerPanelHtml(c, false)}
+    ${playerPanelHtml(p, true)}
+  </div>
+
+  <div class="controls">
+    ${myTurn && G.phase==='set' ? `<span class="hint">セットフェイズ：手札から1枚エサ場に出せます（下の手札をクリック）。</span><button id="skipFeedBtn">エサをセットしない</button>` : ''}
+    ${myTurn && G.phase==='main' ? `<button class="primary" id="endTurnBtn">ターンエンド</button>` : ''}
+    ${!myTurn ? `<span class="hint">相手のターンです…</span>` : ''}
+  </div>
+
+  <h3 style="margin-top:6px;font-size:14px;color:var(--gold)">ログ</h3>
+  <div class="logPanel" id="logPanel">
+    ${G.log.slice().reverse().map(l=>`<div><span class="t">[T${l.turn} ${l.who}]</span> ${l.text}</div>`).join('')}
+  </div>
+
+  ${pendingUI ? modalHtml() : ''}
+  ${cardInfoModal ? cardInfoModalHtml() : ''}
+  `;
+}
+
+function phaseLabel(ph){ return {draw:'ドロー', set:'セット', main:'メイン', end:'終了'}[ph]||ph; }
+
+function playerPanelHtml(pl, isMe){
+  const ownerIdx = G.players.indexOf(pl);
+  const directHit = fx.directHitOwnerIdx === ownerIdx;
+  return `
+  <div class="playerPanel ${isMe?'me':'enemy'} ${directHit?'directHit':''}">
+    <div class="pHeader">
+      <div class="pname">${pl.name}${pl.isCpu?'（CPU）':''}</div>
+      <div class="statChips">
+        <div>山札 <b>${pl.deck.length}</b></div>
+        <div>手札 <b>${pl.hand.length}</b></div>
+        <div>捨て札 <b>${pl.grave.length}</b></div>
+        <div>縄張り <span class="territoryDots">${Array.from({length:TERRITORY_SIZE}).map((_,i)=>`<span class="${i<pl.territory.length?'':'used'}"></span>`).join('')}</span></div>
+      </div>
+    </div>
+    <div class="hint" style="margin-bottom:4px;">エサ場（コスト源）：</div>
+    <div class="feedZone">${pl.feed.map(f=>`<div class="feedChip" title="${CARD_MAP[f.cardId].name}">🌾</div>`).join('') || '<span class="hint">（なし）</span>'}</div>
+    <div class="hint" style="margin:6px 0 4px;">場：</div>
+    <div class="fieldZone">
+      ${pl.field.map(b=>bugHtml(pl,b,isMe)).join('') || '<span class="hint">（虫がいません）</span>'}
+    </div>
+    ${isMe ? `<div class="hint" style="margin:8px 0 2px;">手札：</div><div class="handRow">${pl.hand.map((h,i)=>handCardHtml(h,i)).join('')}</div>` : ''}
+  </div>`;
+}
+
+function bugHtml(pl, b, isMe){
+  const card = CARD_MAP[b.cardId];
+  const maxHp = bugMaxHp({},b);
+  const hpLeft = Math.max(0, maxHp-b.damage);
+  const pct = Math.round(hpLeft/maxHp*100);
+  const color = bugColor(b);
+  const canClickToAttack = isMe && G.active===0 && G.phase==='main' && !b.hasAttacked && !b.flipped && !b.dying;
+  const flags = [];
+  if(card.keyword) flags.push(card.keyword);
+  if(b.protectedTurns>0) flags.push('擬態保護');
+  if(b.debuffTurns>0) flags.push('攻撃力減');
+  if(b.hasAttacked) flags.push('攻撃済');
+  const techLine = card.techs.map(t=>`${t.name}${t.power}`).join('／');
+  const isAttacker = fx.attackerUid === b.uid;
+  const isHit = fx.hitUids.includes(b.uid);
+  const attackClass = isAttacker ? (fx.attackDir==='up' ? 'attacking-up' : 'attacking-down') : '';
+  const breakBits = b.dying ? `<div class="breakBits">${[...Array(6)].map((_,i)=>{
+    const ang = (i/6)*2*Math.PI; const dist=34;
+    const bx=(Math.cos(ang)*8).toFixed(0), by=(Math.sin(ang)*8).toFixed(0);
+    const bx2=(Math.cos(ang)*dist).toFixed(0), by2=(Math.sin(ang)*dist).toFixed(0);
+    return `<span style="--bx:${bx}px;--by:${by}px;--bx2:${bx2}px;--by2:${by2}px;animation-delay:${(i*0.02).toFixed(2)}s;">💥</span>`;
+  }).join('')}</div>` : '';
+  return `
+  <div class="bug ${color} ${b.flipped?'flipped':''} ${b.protectedTurns>0?'protected':''} ${canClickToAttack?'selectable':''} ${attackClass} ${isHit?'hitFlash':''} ${b.dying?'dying':''}"
+       ${canClickToAttack?`data-atk="${b.uid}"`:''}>
+    <div class="bname"><span class="cardNameLink" data-showcard="${b.cardId}">${card.name}</span></div>
+    <div class="hpbar"><div style="width:${pct}%"></div></div>
+    <div class="hpnum">${hpLeft} / ${maxHp}</div>
+    <div class="atk">${techLine}</div>
+    ${b.attachments.length? `<div class="attachList">${b.attachments.map(a=>'★'+CARD_MAP[a].name).join(' ')}</div>`:''}
+    <div class="flags">${flags.map(f=>`<span class="tag">${f}</span>`).join('')}</div>
+    ${isHit ? `<div class="hitStars"><span>✦</span><span>✧</span><span>★</span></div>` : ''}
+    ${breakBits}
+  </div>`;
+}
+
+function handCardHtml(h,i){
+  const c = CARD_MAP[h.cardId];
+  const affordable = canPayCost(me(), c.cost) && G.active===0 && G.phase==='main';
+  const cls = c.type==='bug' ? c.color : (c.type==='enhance'?'enh':'spell');
+  let line = '';
+  if(c.type==='bug'){
+    line = c.techs.map(t=>`${t.name}${t.power}`).join('／');
+    if(c.keyword) line += `／＜${c.keyword}＞`;
+  } else {
+    line = c.desc;
+  }
+  return `
+  <div class="handCard ${cls} ${affordable?'':'unaffordable'}" data-hand="${i}" data-playable="${affordable?1:0}">
+    <div class="cn"><span class="cardNameLink" data-showcard="${c.id}">${c.name}</span></div>
+    <div class="cm">${c.type==='bug'?COLOR_JP[c.color]+'／':''}コスト${c.cost}${c.type==='bug'?'／体力'+c.hp:''}</div>
+    <div class="ce">${line}</div>
+  </div>`;
+}
+
+function modalHtml(){
+  return `
+  <div class="modalOverlay">
+    <div class="modal">
+      <h3>${pendingUI.title}</h3>
+      ${pendingUI.options.map((o,i)=>`<button class="opt" data-opt="${i}" ${o.disabled?'disabled':''}>${o.label}</button>`).join('')}
+      ${actionSnapshot ? `<button class="opt danger" id="cancelChoiceBtn" style="margin-top:10px;">← 戻る（この行動をキャンセル）</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function attachGameHandlers(){
+  if(G.gameOver){
+    const b = document.getElementById('backToDeck');
+    if(b) b.onclick = ()=>{ screen='deck'; render(); };
+    return;
+  }
+  const skipBtn = document.getElementById('skipFeedBtn');
+  if(skipBtn) skipBtn.onclick = ()=> skipFeed();
+  const endBtn = document.getElementById('endTurnBtn');
+  if(endBtn) endBtn.onclick = ()=> endTurn();
+
+  document.querySelectorAll('[data-hand]').forEach(el=>{
+    el.onclick = ()=>{
+      const i = parseInt(el.getAttribute('data-hand'));
+      const p = me();
+      if(G.active!==0) return;
+      if(G.phase==='set'){ placeFeed(i); return; }
+      if(G.phase==='main'){
+        if(el.getAttribute('data-playable')==='1') playHandCard(i);
+      }
+    };
+  });
+  document.querySelectorAll('[data-atk]').forEach(el=>{
+    el.onclick = ()=>{
+      const uidv = el.getAttribute('data-atk');
+      const b = me().field.find(x=>x.uid===uidv);
+      if(b) beginAttack(b);
+    };
+  });
+  attachCardInfoHandlers();
+  if(pendingUI){
+    document.querySelectorAll('[data-opt]').forEach(el=>{
+      el.onclick = ()=>{
+        const i = parseInt(el.getAttribute('data-opt'));
+        pickOption(pendingUI.options[i]);
+      };
+    });
+    const cancelBtn = document.getElementById('cancelChoiceBtn');
+    if(cancelBtn) cancelBtn.onclick = ()=> restoreSnapshot();
+  }
+}
+
+render();
+</script>
+</body>
+</html>
